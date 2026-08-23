@@ -1,0 +1,66 @@
+{
+  "contract_version": 1,
+  "mode": "client_owned_google_cloud_project",
+  "supported_account_type": "google_workspace_internal",
+  "ownership": {
+    "google_cloud_project": "client",
+    "oauth_app": "client",
+    "oauth_credentials": "client",
+    "brain4u_shared_oauth_app": false
+  },
+  "authorization_flow": {
+    "type": "installer_driven_oauth_2_browser_consent",
+    "starts_during_installation": true,
+    "user_selects_account": true,
+    "user_approves_scopes": true,
+    "offline_access": true,
+    "refresh_token_destination": "client_dedicated_vps_secret_store"
+  },
+  "access": {
+    "identity": {
+      "scopes": [
+        "openid",
+        "https://www.googleapis.com/auth/userinfo.email"
+      ],
+      "purpose": "Bind the connector to the consenting Google identity."
+    },
+    "gmail": {
+      "scopes": [
+        "https://www.googleapis.com/auth/gmail.readonly"
+      ],
+      "purpose": "Read and search messages and attachments for user-requested retrieval and capture.",
+      "writes_allowed": false,
+      "classification": "restricted"
+    },
+    "drive": {
+      "scopes": [
+        "https://www.googleapis.com/auth/drive.readonly"
+      ],
+      "purpose": "Read and search files visible to the consenting user.",
+      "writes_allowed": false,
+      "classification": "restricted"
+    },
+    "calendar": {
+      "scopes": [
+        "https://www.googleapis.com/auth/calendar.readonly"
+      ],
+      "purpose": "Read calendars and events for context and user-requested retrieval.",
+      "writes_allowed": false,
+      "classification": "sensitive"
+    }
+  },
+  "explicit_exclusions": [
+    "send_or_modify_email",
+    "create_or_modify_drive_files",
+    "create_or_modify_calendar_events",
+    "domain_wide_delegation",
+    "service_account_impersonation"
+  ],
+  "durability_requirement": "The client-owned OAuth app must be Internal in the client's Workspace. External Testing mode is not accepted for an always-on installation.",
+  "secret_handling": {
+    "oauth_client_secret": "installer_secret_store_only",
+    "refresh_token": "vps_secret_store_only",
+    "logs": "redacted",
+    "brain_repository": "never"
+  }
+}

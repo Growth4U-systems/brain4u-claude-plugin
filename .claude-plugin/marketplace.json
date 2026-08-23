@@ -1,0 +1,25 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "brain4u",
+  "description": "Plugins oficiales de Brain4U para instalar y operar asistentes propiedad del usuario.",
+  "owner": {
+    "name": "Growth4U"
+  },
+  "plugins": [
+    {
+      "name": "brain4u-installer",
+      "source": "./claude-plugin",
+      "description": "Instala Brain4U en una VPS de Hetzner propiedad del usuario mediante un flujo guiado y reanudable.",
+      "author": {
+        "name": "Growth4U"
+      },
+      "category": "productivity",
+      "keywords": [
+        "brain4u",
+        "hermes",
+        "hetzner",
+        "installer"
+      ]
+    }
+  ]
+}

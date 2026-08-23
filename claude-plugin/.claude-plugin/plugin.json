@@ -1,0 +1,8 @@
+{
+  "name": "brain4u-installer",
+  "version": "0.1.8",
+  "description": "Instalador guiado de Brain4U para Claude Code, con VPS propiedad del usuario y ejecucion reanudable.",
+  "author": {
+    "name": "Growth4U"
+  }
+}

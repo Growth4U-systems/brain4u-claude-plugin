@@ -1,0 +1,15 @@
+{
+  "name": "brain4u-installer-engine",
+  "version": "0.4.5",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "brain4u-installer": "./bin/brain4u-installer.js"
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

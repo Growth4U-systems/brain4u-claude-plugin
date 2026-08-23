@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "installationId": "brain4u-spike-example",
+  "target": {
+    "host": "192.0.2.10",
+    "user": "root",
+    "identityFile": "~/.ssh/brain4u_installer_ed25519",
+    "strictHostKeyChecking": "yes"
+  },
+  "hermes": {
+    "image": "nousresearch/hermes-agent@sha256:123bd6f17c355ba6f9e7b934749d435b319be6607b6ef56f4ba0e45f3fbba46a"
+  },
+  "provider": {
+    "kind": "openrouter",
+    "model": "openrouter/free",
+    "keyEnv": "OPENROUTER_API_KEY"
+  }
+}

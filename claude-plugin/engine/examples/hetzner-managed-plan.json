@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "installationId": "brain4u-managed-example",
+  "infrastructure": {
+    "kind": "hetzner",
+    "tokenEnv": "HCLOUD_TOKEN",
+    "serverName": "brain4u-managed-example",
+    "serverType": "cx23",
+    "location": "nbg1",
+    "image": "ubuntu-24.04",
+    "sshPublicKeyFile": "~/.ssh/brain4u_installer_ed25519.pub",
+    "sshAllowedCidr": "192.0.2.10/32",
+    "maxMonthlyGross": "6.00",
+    "currency": "EUR",
+    "publicIpv4": true,
+    "publicIpv6": true,
+    "deleteProtection": true,
+    "rebuildProtection": true
+  },
+  "target": {
+    "user": "root",
+    "identityFile": "~/.ssh/brain4u_installer_ed25519",
+    "strictHostKeyChecking": "accept-new",
+    "userKnownHostsFile": "~/.brain4u-installer/brain4u-managed-example/known-hosts"
+  },
+  "hermes": {
+    "image": "nousresearch/hermes-agent@sha256:123bd6f17c355ba6f9e7b934749d435b319be6607b6ef56f4ba0e45f3fbba46a"
+  },
+  "provider": {
+    "kind": "openrouter",
+    "model": "openrouter/free",
+    "keyEnv": "OPENROUTER_API_KEY"
+  }
+}
