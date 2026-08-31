@@ -21,18 +21,19 @@ claude plugin install brain4u-installer@brain4u --scope user
 
 Cuando se publique el repositorio, la primera ruta se sustituira por su URL. No hace falta cambiar el plugin.
 
-El plugin prepara automaticamente la configuracion y una clave SSH dedicada, abre paginas locales para conectar OpenRouter y Hetzner, consulta el precio vigente y exige una confirmacion concreta antes de crear infraestructura. Una vez confirmado, provisiona la VPS, instala Hermes y verifica el resultado.
+El plugin crea primero un repositorio privado `brain4u` en la cuenta GitHub del usuario y carga la plantilla vacia incluida: LLM Wiki, configuracion GBrain read-only, reglas y workflows inspirados en GStack, gobernanza, privacidad, hooks, skills de memoria, lint y escritura por pull request. Registra una clave de despliegue dedicada para ese repositorio. Despues prepara la configuracion, abre paginas locales para conectar OpenRouter y Hetzner, consulta el precio vigente y exige una confirmacion concreta antes de crear infraestructura. Una vez confirmado, provisiona la VPS, clona el Brain, lo monta en Hermes como `/opt/brain`, instala el runtime y verifica la conexion completa.
 
 ## Dependencias del cliente
 
 - Claude Code.
+- GitHub CLI (`gh`) con una sesion autenticada.
 - Node.js 20 o superior.
 - OpenSSH con `ssh-keygen`.
 - Una cuenta de OpenRouter, que puede crearse durante el recorrido.
 - Una cuenta de Hetzner con facturacion habilitada, que puede crearse durante el recorrido.
 
 No se necesita Docker en el ordenador del usuario. Docker se instala en la VPS.
-El plugin crea una clave SSH dedicada bajo `~/.ssh/brain4u_installer_ed25519` solo cuando no existe y nunca reemplaza otras claves. La configuracion privada se genera bajo `~/.brain4u-installer/`, sin tokens ni claves de proveedor.
+El plugin crea una clave SSH dedicada bajo `~/.ssh/brain4u_installer_ed25519` para administrar la VPS y otra clave aislada bajo `~/.brain4u-installer/<installationId>/credentials/` para conectar esa instalacion con su repositorio Brain. Solo las crea cuando faltan y nunca reemplaza otras claves. La configuracion privada se genera bajo `~/.brain4u-installer/`, sin tokens ni claves de proveedor.
 
 ## Verificar el paquete
 

@@ -32,6 +32,32 @@ test('validates a secret-free pinned configuration', () => {
   assert.match(fingerprintConfig(config), /^[a-f0-9]{64}$/);
 });
 
+test('validates a resolved private Brain repository connection', () => {
+  const raw = validConfig();
+  raw.brain = {
+    repositoryName: 'brain4u',
+    visibility: 'private',
+    deployKeyFile: '/tmp/brain4u-deploy-key',
+    owner: 'octocat',
+    sshUrl: 'git@github.com:octocat/brain4u.git',
+  };
+  const config = validateConfig(raw);
+  assert.equal(config.brain.owner, 'octocat');
+  assert.equal(config.brain.sshUrl, 'git@github.com:octocat/brain4u.git');
+});
+
+test('rejects a Brain SSH URL that does not match its owner and repository', () => {
+  const raw = validConfig();
+  raw.brain = {
+    repositoryName: 'brain4u',
+    visibility: 'private',
+    deployKeyFile: '/tmp/brain4u-deploy-key',
+    owner: 'octocat',
+    sshUrl: 'git@github.com:someone-else/brain4u.git',
+  };
+  assert.throws(() => validateConfig(raw), /does not match/);
+});
+
 test('rejects inline secrets', () => {
   const raw = validConfig();
   raw.provider.apiKey = 'must-not-be-here';

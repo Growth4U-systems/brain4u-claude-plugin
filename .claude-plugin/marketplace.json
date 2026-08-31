@@ -9,7 +9,7 @@
     {
       "name": "brain4u-installer",
       "source": "./claude-plugin",
-      "description": "Instala Brain4U en una VPS de Hetzner propiedad del usuario mediante un flujo guiado y reanudable.",
+      "description": "Crea el Brain privado del usuario y lo conecta con Hermes en su propia VPS mediante un flujo guiado y reanudable.",
       "author": {
         "name": "Growth4U"
       },

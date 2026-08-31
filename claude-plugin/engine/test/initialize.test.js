@@ -27,10 +27,15 @@ test('creates a private deterministic installation configuration without secrets
 
   const config = JSON.parse(await readFile(result.configPath, 'utf8'));
   assert.equal(config.installationId, 'brain4u-generated-test');
+  assert.deepEqual(config.brain, {
+    repositoryName: 'brain4u',
+    visibility: 'private',
+    deployKeyFile: path.join(root, 'brain4u-generated-test', 'credentials', 'brain-deploy-key'),
+  });
   assert.equal(config.infrastructure.sshAllowedCidr, '192.0.2.55/32');
   assert.equal(config.infrastructure.maxMonthlyGross, '6.00');
   assert.equal(config.target.identityFile, privateKey);
-  assert.equal(result.nextCommand, 'connect-openrouter');
+  assert.equal(result.nextCommand, 'create-brain');
   assert.equal((await stat(result.configPath)).mode & 0o777, 0o600);
   assert.equal(JSON.stringify(config).includes('private-test-material'), false);
   await assert.rejects(

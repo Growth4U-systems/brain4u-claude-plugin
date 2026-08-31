@@ -4,6 +4,7 @@ import { loadHetznerCredential, loadOpenRouterCredential } from './credentials.j
 import { initializeInstallation } from './initialize.js';
 import { connectHetznerCommand } from './onboarding.js';
 import { connectOpenRouterCommand } from './openrouter-onboarding.js';
+import { createBrainRepositoryCommand } from './brain-repository.js';
 import { redact } from './redact.js';
 
 function usage() {
@@ -15,6 +16,7 @@ function usage() {
   brain4u-installer verify --config <path> [--smoke-inference] [--json]
   brain4u-installer connect-openrouter --config <path> [--state-dir <path>] [--json]
   brain4u-installer connect-hetzner --config <path> [--state-dir <path>] [--json]
+  brain4u-installer create-brain --config <path> [--json]
 `;
 }
 
@@ -31,7 +33,7 @@ function parseArgs(argv) {
     else if (argument === '--approve-infrastructure') options.infrastructureApproval = argv[++index];
     else throw new Error(`Unknown argument: ${argument}`);
   }
-  if (!['init', 'plan', 'apply', 'resume', 'verify', 'connect-openrouter', 'connect-hetzner'].includes(command)) throw new Error(usage());
+  if (!['init', 'plan', 'apply', 'resume', 'verify', 'connect-openrouter', 'connect-hetzner', 'create-brain'].includes(command)) throw new Error(usage());
   if (command !== 'init' && !options.configPath) throw new Error('--config is required');
   options.stateRoot ??= defaultStateRoot();
   return options;
@@ -73,6 +75,11 @@ function renderHuman(result) {
       ? `OpenRouter is already connected for ${result.installationId}`
       : `OpenRouter connected for ${result.installationId}. Return to Claude Code to connect Hetzner.`;
   }
+  if (result.command === 'create-brain') {
+    return result.alreadyExisted
+      ? `Brain repository and runtime access verified: ${result.url}`
+      : `Private Brain repository and runtime access created: ${result.url}`;
+  }
   return `Installation ${result.status}: ${result.completedSteps.length} steps completed`;
 }
 
@@ -91,6 +98,11 @@ export async function main(argv) {
       return;
     }
     const loaded = await loadConfig(options.configPath);
+    if (options.command === 'create-brain') {
+      const result = await createBrainRepositoryCommand({ config: loaded.config, configPath: loaded.configPath });
+      process.stdout.write(`${options.json ? JSON.stringify(result, null, 2) : renderHuman(result)}\n`);
+      return;
+    }
     if (!process.env[loaded.config.provider.keyEnv]) {
       const storedCredential = await loadOpenRouterCredential(options.stateRoot, loaded.config.installationId);
       if (storedCredential) process.env[loaded.config.provider.keyEnv] = storedCredential;

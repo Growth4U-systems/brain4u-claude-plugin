@@ -6,6 +6,7 @@ Motor determinista separado de Claude Code. Su estado no contiene credenciales y
 
 ```bash
 node ./bin/brain4u-installer.js init
+node ./bin/brain4u-installer.js create-brain --config /ruta/absoluta/config.json
 node ./bin/brain4u-installer.js plan --config /ruta/absoluta/config.json
 node ./bin/brain4u-installer.js apply --config /ruta/absoluta/config.json
 node ./bin/brain4u-installer.js resume --config /ruta/absoluta/config.json
@@ -16,6 +17,8 @@ node ./bin/brain4u-installer.js connect-openrouter --config /ruta/absoluta/confi
 `init` crea la configuracion privada y una clave SSH dedicada en el ordenador del usuario. Detecta la IPv4 publica mediante `api.ipify.org` para limitar el acceso SSH a ese origen. No contacta Hetzner ni crea recursos remotos.
 
 `plan` y `verify` no modifican la instalacion. `apply` reconcilia las postcondiciones y `resume` exige que exista un estado previo. La clave de OpenRouter se lee de la credencial privada local o de la variable indicada por `provider.keyEnv` solo cuando falta en la VPS.
+
+`create-brain` crea o valida el repositorio privado, registra una clave de despliegue dedicada y guarda su URL SSH en la configuracion. `apply` instala esa clave en la VPS, clona el Brain en `/opt/brain4u/brain` y lo monta en Hermes como `/opt/brain`. `verify` comprueba marcador, origen Git, montaje y directorio de trabajo.
 
 El estado se guarda con permisos `0600` bajo `~/.brain4u-installer/<installationId>/state.json`.
 

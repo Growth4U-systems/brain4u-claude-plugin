@@ -8,6 +8,13 @@ required_files=(
   "$plugin_root/.claude-plugin/plugin.json"
   "$plugin_root/skills/brain4u-install/SKILL.md"
   "$plugin_root/engine/bin/brain4u-installer.js"
+  "$plugin_root/brain-template/.brain4u-template-version"
+  "$plugin_root/brain-template/CLAUDE.md"
+  "$plugin_root/brain-template/AGENTS.md"
+  "$plugin_root/brain-template/gbrain.yml"
+  "$plugin_root/brain-template/governance/memory-writeback-policy.md"
+  "$plugin_root/brain-template/skills/brain-read/SKILL.md"
+  "$plugin_root/brain-template/skills/brain-write/SKILL.md"
   "$plugin_root/vps/bootstrap-docker.sh"
   "$plugin_root/vps/deploy-hermes.sh"
   "$plugin_root/vps/smoke-hermes.sh"
@@ -23,6 +30,7 @@ for required_file in "${required_files[@]}"; do
 done
 
 node --test "$plugin_root/engine/test"/*.test.js >/dev/null
+bash "$plugin_root/brain-template/lint-brain.sh" >/dev/null
 
 if grep -R -n --exclude='self-test.sh' --fixed-strings '$CLAUDE_PLUGIN_ROOT/../engine' "$plugin_root" >/dev/null; then
   printf 'The package still references an engine outside the plugin.\n' >&2

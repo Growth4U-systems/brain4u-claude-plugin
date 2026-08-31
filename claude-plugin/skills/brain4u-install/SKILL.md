@@ -27,7 +27,7 @@ bash "${CLAUDE_PLUGIN_ROOT}/scripts/preflight.sh"
 
 El script solo inspecciona y devuelve JSON. No instala ni modifica nada.
 
-Si Node 20 o superior, `ssh` o `ssh-keygen` no estan disponibles, detenerse y explicar el requisito antes de continuar. No intentar crear infraestructura con un preflight incompleto.
+Si Node 20 o superior, `gh`, `git`, `ssh` o `ssh-keygen` no estan disponibles, detenerse y explicar el requisito antes de continuar. No intentar crear el Brain ni infraestructura con un preflight incompleto. `gh auth status` debe confirmar una sesion GitHub valida.
 
 Preparar la instalacion local mediante el motor:
 
@@ -38,6 +38,18 @@ bash "${CLAUDE_PLUGIN_ROOT}/scripts/installer-engine.sh" init
 Explicar antes que este paso crea una clave SSH dedicada solo si falta, detecta la IPv4 publica y guarda una configuracion privada bajo `~/.brain4u-installer/`. No reemplaza claves existentes, no contacta Hetzner y no crea recursos remotos. Tomar `configPath` de la salida JSON y usarlo en todos los comandos siguientes. No construir o editar esa configuracion mediante razonamiento libre.
 
 Si la preparacion de la clave falla y hace falta diagnosticarla de forma aislada, se puede usar `scripts/prepare-local.sh` como herramienta de recuperacion. No es parte del recorrido normal.
+
+## Crear el Brain privado
+
+Despues de `init` y antes de conectar proveedores, crear el repositorio privado propiedad del usuario:
+
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/installer-engine.sh" create-brain "/ruta/absoluta/config.json"
+```
+
+Este paso usa exclusivamente la sesion local ya autorizada mediante `gh auth login`. Crea `brain4u` como repositorio privado en la cuenta GitHub del usuario y publica la plantilla vacia incluida en el plugin: arquitectura LLM Wiki, `gbrain.yml`, reglas inspiradas en GStack, gobernanza, privacidad, contrato de aprendizaje, hooks, skills de memoria, lint y workflow de pull requests. Tambien crea una clave de despliegue aislada para la instalacion, la registra con acceso de escritura en ese repositorio y guarda la URL SSH validada. No copia doctrina, datos, clientes ni credenciales de Growth4U.
+
+Si el repositorio ya existe y contiene el marcador valido de la plantilla Brain4U, verificarlo y continuar sin modificar su contenido. Si existe con el mismo nombre pero no es un Brain4U reconocido, detenerse. Nunca sobrescribir un repositorio existente ni convertirlo en publico.
 
 ## Motor
 
@@ -88,3 +100,7 @@ bash "${CLAUDE_PLUGIN_ROOT}/scripts/installer-engine.sh" verify "/ruta/absoluta/
 ```
 
 No declarar exito si `verify` devuelve `ok: false` o contiene fallos.
+
+Durante `apply`, el motor clona el repositorio privado en `/opt/brain4u/brain`, monta ese directorio en Hermes como `/opt/brain` y configura ese path como directorio de trabajo. Hermes empieza por `INDEX.md`, sigue las reglas del repositorio y puede trabajar sobre la memoria durable. `verify` debe comprobar el marcador Brain4U, el origen Git, el montaje y el directorio de trabajo, ademas de la salud del runtime.
+
+Al terminar, informar tambien la URL devuelta por `create-brain` y explicar que ese repositorio es la memoria durable propiedad del usuario. Hermes es el runtime del agente y la VPS es su entorno persistente.

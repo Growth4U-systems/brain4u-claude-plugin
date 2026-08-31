@@ -6,10 +6,10 @@ action="${1:-}"
 
 case "$action" in
   init) ;;
-  connect-openrouter|connect-hetzner|plan|apply|resume|verify) ;;
+  connect-openrouter|connect-hetzner|create-brain|plan|apply|resume|verify) ;;
   *)
     printf 'Usage: installer-engine.sh init [extra options]\n' >&2
-    printf '       installer-engine.sh <connect-openrouter|connect-hetzner|plan|apply|resume|verify> <config-path> [extra options]\n' >&2
+    printf '       installer-engine.sh <connect-openrouter|connect-hetzner|create-brain|plan|apply|resume|verify> <config-path> [extra options]\n' >&2
     exit 2
     ;;
 esac

@@ -10,7 +10,7 @@ fi
 export DEBIAN_FRONTEND=noninteractive
 
 apt-get update
-apt-get install -y ca-certificates curl jq
+apt-get install -y ca-certificates curl git jq openssh-client
 
 install -m 0755 -d /etc/apt/keyrings
 if [[ ! -s /etc/apt/keyrings/docker.asc ]]; then

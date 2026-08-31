@@ -1,10 +1,11 @@
 import { spawn } from 'node:child_process';
 
 export async function runProcess(command, args, options = {}) {
-  const { input, timeoutMs = 600_000, env = process.env } = options;
+  const { input, timeoutMs = 600_000, env = process.env, cwd } = options;
 
   return await new Promise((resolve, reject) => {
     const child = spawn(command, args, {
+      cwd,
       env,
       stdio: ['pipe', 'pipe', 'pipe'],
     });

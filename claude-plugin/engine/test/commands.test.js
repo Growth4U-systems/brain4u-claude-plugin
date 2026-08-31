@@ -25,6 +25,47 @@ test('plan evaluates checks without creating installer state', async () => {
   await assert.rejects(access(path.join(root, installationId, 'state.json')), /ENOENT/);
 });
 
+test('plan requires create-brain before infrastructure work', async () => {
+  await assert.rejects(planCommand({
+    config: {
+      installationId: 'brain4u-test',
+      brain: { repositoryName: 'brain4u', owner: null, sshUrl: null },
+      target: { host: '192.0.2.10' },
+    },
+    fingerprint: 'fingerprint',
+    stateRoot: '/tmp/brain4u-unresolved-test',
+    steps: [],
+  }), /run create-brain/);
+});
+
+test('verify confirms the private Brain is mounted inside Hermes', async () => {
+  const image = `nousresearch/hermes-agent@sha256:${'a'.repeat(64)}`;
+  const result = await verifyCommand({
+    config: {
+      installationId: 'brain4u-test',
+      target: { host: '192.0.2.80', user: 'root' },
+      hermes: { image },
+      brain: { owner: 'octocat', sshUrl: 'git@github.com:octocat/brain4u.git' },
+    },
+    runSshImpl: async () => ({ stdout: [
+      'docker=active',
+      'container=running',
+      `image=${image}`,
+      'env_mode=600',
+      'canary=78d000b3297402588017b17f28ddaafd23884a6c76f53ad75361f9a7191b897a',
+      'health={"status":"ok"}',
+      'brain_marker=present',
+      'brain_origin=git@github.com:octocat/brain4u.git',
+      'brain_workdir=/opt/brain',
+      'brain_mounted=true',
+      'secret_in_logs=false',
+    ].join('\n') }),
+    isTcpPortOpenImpl: async () => false,
+  });
+  assert.equal(result.ok, true);
+  assert.equal(result.checks.brainRepository.mountedInHermes, true);
+});
+
 test('accepts a healthy inference response containing the smoke marker', () => {
   assert.equal(isSuccessfulSmoke({
     content: 'Additional text\nBRAIN4U_OK',

@@ -5,11 +5,12 @@ import path from 'node:path';
 
 import { parseMoney } from './money.js';
 
-const ALLOWED_SECRET_REFERENCE_FIELDS = new Set(['keyEnv', 'tokenEnv']);
+const ALLOWED_SECRET_REFERENCE_FIELDS = new Set(['keyEnv', 'tokenEnv', 'deployKeyFile']);
 const SUSPICIOUS_FIELD = /(secret|password|token|api.?key|credential)/i;
 const SAFE_IDENTIFIER = /^[a-z0-9][a-z0-9-]{2,62}$/;
 const SAFE_REMOTE_VALUE = /^[A-Za-z0-9._:/@+-]+$/;
 const PINNED_IMAGE = /^nousresearch\/hermes-agent@sha256:[a-f0-9]{64}$/;
+const SAFE_REPOSITORY_NAME = /^[A-Za-z0-9._-]{1,100}$/;
 
 export function expandHome(value) {
   if (value === '~') return os.homedir();
@@ -141,6 +142,27 @@ export function validateConfig(raw) {
     hermes: { image },
     provider: { kind: 'openrouter', model, keyEnv },
   };
+  if (raw.brain !== undefined) {
+    const repositoryName = requiredString(raw.brain.repositoryName, 'brain.repositoryName');
+    const deployKeyFile = expandHome(requiredString(raw.brain.deployKeyFile, 'brain.deployKeyFile'));
+    if (!SAFE_REPOSITORY_NAME.test(repositoryName)) {
+      throw new Error('brain.repositoryName contains unsupported characters');
+    }
+    if (raw.brain.visibility !== 'private') {
+      throw new Error('brain.visibility must be private');
+    }
+    const owner = raw.brain.owner == null ? null : requiredString(raw.brain.owner, 'brain.owner');
+    const sshUrl = raw.brain.sshUrl == null ? null : requiredString(raw.brain.sshUrl, 'brain.sshUrl');
+    if ((owner === null) !== (sshUrl === null)) {
+      throw new Error('brain.owner and brain.sshUrl must be set together by create-brain');
+    }
+    if (owner !== null) {
+      if (!/^[A-Za-z0-9-]{1,39}$/.test(owner)) throw new Error('brain.owner contains unsupported characters');
+      const expectedSshUrl = `git@github.com:${owner}/${repositoryName}.git`;
+      if (sshUrl !== expectedSshUrl) throw new Error('brain.sshUrl does not match the private Brain repository');
+    }
+    config.brain = { repositoryName, visibility: 'private', deployKeyFile, owner, sshUrl };
+  }
   if (infrastructure) config.infrastructure = infrastructure;
   return config;
 }
@@ -167,6 +189,10 @@ export async function loadConfig(configPath) {
   if (config.infrastructure) {
     const publicKeyStat = await stat(config.infrastructure.sshPublicKeyFile);
     if (!publicKeyStat.isFile()) throw new Error('infrastructure.sshPublicKeyFile is not a file');
+  }
+  if (config.brain?.owner) {
+    const deployKeyStat = await stat(config.brain.deployKeyFile);
+    if (!deployKeyStat.isFile()) throw new Error('brain.deployKeyFile is not a file');
   }
   return { config, configPath: absolutePath, fingerprint: fingerprintConfig(config) };
 }

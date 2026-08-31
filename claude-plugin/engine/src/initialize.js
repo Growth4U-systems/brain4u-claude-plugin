@@ -109,6 +109,11 @@ export async function initializeInstallation({
   const rawConfig = {
     schemaVersion: 1,
     installationId,
+    brain: {
+      repositoryName: 'brain4u',
+      visibility: 'private',
+      deployKeyFile: path.join(installationDirectory, 'credentials', 'brain-deploy-key'),
+    },
     infrastructure: {
       kind: 'hetzner',
       tokenEnv: 'HCLOUD_TOKEN',
@@ -153,6 +158,6 @@ export async function initializeInstallation({
     sshKeyCreated: sshKey.created,
     mutationsPerformed: true,
     remoteMutationsPerformed: false,
-    nextCommand: 'connect-openrouter',
+    nextCommand: 'create-brain',
   };
 }

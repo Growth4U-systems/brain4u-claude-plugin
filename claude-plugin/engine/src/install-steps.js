@@ -31,6 +31,9 @@ export function buildInstallSteps(config) {
   const hermesConfig = renderHermesConfig(config);
   const composeHash = sha256(compose);
   const configHash = sha256(hermesConfig);
+  const brainCoreCheck = config.brain?.sshUrl
+    ? `; test -f /opt/brain4u/brain/.brain4u-template-version; test "$(git -C /opt/brain4u/brain remote get-url origin)" = ${config.brain.sshUrl}; test "$(docker inspect brain4u-hermes-spike --format '{{.Config.WorkingDir}}')" = /opt/brain; docker exec brain4u-hermes-spike test -f /opt/brain/INDEX.md`
+    : '';
 
   return [
     {
@@ -54,11 +57,46 @@ export function buildInstallSteps(config) {
     {
       id: 'docker_runtime',
       description: 'Install and start Docker Engine',
-      check: async () => await commandSucceeds(config, 'command -v docker >/dev/null && command -v jq >/dev/null && systemctl is-active --quiet docker && docker compose version >/dev/null'),
+      check: async () => await commandSucceeds(config, 'command -v docker >/dev/null && command -v git >/dev/null && command -v jq >/dev/null && command -v ssh-keyscan >/dev/null && systemctl is-active --quiet docker && docker compose version >/dev/null'),
       run: async () => {
         await runSsh(config, 'bash -s', { input: await script('bootstrap-docker.sh') });
       },
     },
+    ...(config.brain?.sshUrl ? [{
+      id: 'brain_checkout',
+      description: 'Connect the private Brain repository to the VPS',
+      check: async () => {
+        const deployKey = await readFile(config.brain.deployKeyFile);
+        const deployKeyHash = sha256(deployKey);
+        return await commandSucceeds(config, `set -e; test "$(sha256sum /opt/brain4u/secrets/ssh/brain-deploy-key 2>/dev/null | awk '{print $1}')" = ${deployKeyHash}; test -f /opt/brain4u/secrets/ssh/known_hosts; test -f /opt/brain4u/brain/.brain4u-template-version; test "$(git -C /opt/brain4u/brain remote get-url origin)" = ${config.brain.sshUrl}; GIT_SSH_COMMAND='ssh -i /opt/brain4u/secrets/ssh/brain-deploy-key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=/opt/brain4u/secrets/ssh/known_hosts' git -C /opt/brain4u/brain ls-remote origin HEAD >/dev/null`);
+      },
+      run: async () => {
+        const deployKey = await readFile(config.brain.deployKeyFile, 'utf8');
+        await runSsh(config, 'install -d -m 0700 /opt/brain4u/secrets/ssh');
+        await uploadText(config, '/opt/brain4u/secrets/ssh/brain-deploy-key', deployKey, '0600');
+        const remoteCommand = `set -Eeuo pipefail
+install -d -m 0700 /opt/brain4u/secrets/ssh
+known_hosts_tmp=/opt/brain4u/secrets/ssh/known_hosts.tmp
+ssh-keyscan -t ed25519 github.com >"$known_hosts_tmp" 2>/dev/null
+chmod 0600 "$known_hosts_tmp"
+mv "$known_hosts_tmp" /opt/brain4u/secrets/ssh/known_hosts
+export GIT_SSH_COMMAND='ssh -i /opt/brain4u/secrets/ssh/brain-deploy-key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=/opt/brain4u/secrets/ssh/known_hosts'
+if [[ -e /opt/brain4u/brain && ! -d /opt/brain4u/brain/.git ]]; then
+  printf 'Existing /opt/brain4u/brain is not a Git repository; it was not modified.\n' >&2
+  exit 1
+fi
+if [[ ! -d /opt/brain4u/brain/.git ]]; then
+  git clone --branch main --single-branch ${config.brain.sshUrl} /opt/brain4u/brain
+fi
+test -f /opt/brain4u/brain/.brain4u-template-version
+test "$(git -C /opt/brain4u/brain remote get-url origin)" = ${config.brain.sshUrl}
+git -C /opt/brain4u/brain config user.name Brain4U
+git -C /opt/brain4u/brain config user.email brain4u@users.noreply.github.com
+git -C /opt/brain4u/brain ls-remote origin HEAD >/dev/null
+`;
+        await runSsh(config, 'bash -s', { input: remoteCommand, timeoutMs: 120_000 });
+      },
+    }] : []),
     {
       id: 'hermes_files',
       description: 'Install pinned Hermes configuration',
@@ -113,10 +151,10 @@ grep -q '^API_SERVER_HOST=' /opt/brain4u/hermes/data/.env || printf 'API_SERVER_
     },
     {
       id: 'core_verify',
-      description: 'Verify health, persistence and secret hygiene',
-      check: async () => await commandSucceeds(config, `set -e; curl -fsS --max-time 3 http://127.0.0.1:8642/health >/dev/null; test \"$(stat -c %a /opt/brain4u/hermes/data/.env)\" = 600; test \"$(sha256sum /opt/brain4u/hermes/data/verification/persistence-canary.txt | awk '{print $1}')\" = ${PERSISTENCE_CANARY_SHA256}; provider_key=\"$(sed -n 's/^OPENROUTER_API_KEY=//p' /opt/brain4u/hermes/data/.env)\"; ! docker logs brain4u-hermes-spike 2>&1 | grep -Fq \"$provider_key\"`),
+      description: 'Verify Brain connection, health, persistence and secret hygiene',
+      check: async () => await commandSucceeds(config, `set -e; curl -fsS --max-time 3 http://127.0.0.1:8642/health >/dev/null; test \"$(stat -c %a /opt/brain4u/hermes/data/.env)\" = 600; test \"$(sha256sum /opt/brain4u/hermes/data/verification/persistence-canary.txt | awk '{print $1}')\" = ${PERSISTENCE_CANARY_SHA256}; provider_key=\"$(sed -n 's/^OPENROUTER_API_KEY=//p' /opt/brain4u/hermes/data/.env)\"; ! docker logs brain4u-hermes-spike 2>&1 | grep -Fq \"$provider_key\"${brainCoreCheck}`),
       run: async () => {
-        if (!(await commandSucceeds(config, `set -e; curl -fsS --max-time 3 http://127.0.0.1:8642/health >/dev/null; test \"$(stat -c %a /opt/brain4u/hermes/data/.env)\" = 600; test \"$(sha256sum /opt/brain4u/hermes/data/verification/persistence-canary.txt | awk '{print $1}')\" = ${PERSISTENCE_CANARY_SHA256}; provider_key=\"$(sed -n 's/^OPENROUTER_API_KEY=//p' /opt/brain4u/hermes/data/.env)\"; ! docker logs brain4u-hermes-spike 2>&1 | grep -Fq \"$provider_key\"`))) {
+        if (!(await commandSucceeds(config, `set -e; curl -fsS --max-time 3 http://127.0.0.1:8642/health >/dev/null; test \"$(stat -c %a /opt/brain4u/hermes/data/.env)\" = 600; test \"$(sha256sum /opt/brain4u/hermes/data/verification/persistence-canary.txt | awk '{print $1}')\" = ${PERSISTENCE_CANARY_SHA256}; provider_key=\"$(sed -n 's/^OPENROUTER_API_KEY=//p' /opt/brain4u/hermes/data/.env)\"; ! docker logs brain4u-hermes-spike 2>&1 | grep -Fq \"$provider_key\"${brainCoreCheck}`))) {
           throw new Error('Core verification failed');
         }
       },

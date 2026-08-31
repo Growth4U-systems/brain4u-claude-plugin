@@ -25,12 +25,15 @@ printf '  "architecture": "%s",\n' "$(uname -m 2>/dev/null || printf unknown)"
 printf '  "commands": {\n'
 printf '    "claude": %s,\n' "$(command_status claude)"
 printf '    "docker": %s,\n' "$(command_status docker)"
+printf '    "gh": %s,\n' "$(command_status gh)"
 printf '    "git": %s,\n' "$(command_status git)"
 printf '    "node": %s,\n' "$(command_status node)"
-printf '    "ssh": %s\n' "$(command_status ssh)"
+printf '    "ssh": %s,\n' "$(command_status ssh)"
+printf '    "ssh_keygen": %s\n' "$(command_status ssh-keygen)"
 printf '  },\n'
 printf '  "versions": {\n'
 printf '    "node": "%s",\n' "$(command_version node --version)"
+printf '    "gh": "%s",\n' "$(command_version gh --version)"
 printf '    "ssh": "%s"\n' "$(command_version ssh -V)"
 printf '  },\n'
 printf '  "brain4u_ssh_key": {\n'

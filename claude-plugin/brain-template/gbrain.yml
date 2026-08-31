@@ -1,0 +1,27 @@
+# Read-only retrieval contract. Brain4U remains the source of truth.
+storage:
+  db_tracked:
+    - wiki/company/
+    - clients/
+    - agents/
+    - skills/
+    - commands/
+    - hooks/
+    - governance/
+    - docs/
+    - proposals/
+  db_only:
+    - inbox/raw/
+    - raw-context/
+
+archive-crawler:
+  scan_paths:
+    - wiki/company/
+    - clients/
+    - commands/
+    - docs/
+
+runtime:
+  canonical_skills: skills/
+  skill_proposals: proposals/skills/
+  writeback: pull_request
