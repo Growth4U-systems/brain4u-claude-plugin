@@ -6,6 +6,7 @@ Motor determinista separado de Claude Code. Su estado no contiene credenciales y
 
 ```bash
 node ./bin/brain4u-installer.js init
+node ./bin/brain4u-installer.js install-memsearch
 node ./bin/brain4u-installer.js create-brain --config /ruta/absoluta/config.json
 node ./bin/brain4u-installer.js plan --config /ruta/absoluta/config.json
 node ./bin/brain4u-installer.js apply --config /ruta/absoluta/config.json
@@ -15,6 +16,8 @@ node ./bin/brain4u-installer.js connect-openrouter --config /ruta/absoluta/confi
 ```
 
 `init` crea la configuracion privada y una clave SSH dedicada en el ordenador del usuario. Detecta la IPv4 publica mediante `api.ipify.org` para limitar el acceso SSH a ese origen. No contacta Hetzner ni crea recursos remotos.
+
+`install-memsearch` valida el marketplace oficial `zilliztech/memsearch`, instala o actualiza `memsearch@memsearch-plugins` con alcance de usuario, lo habilita y comprueba el resultado. Es idempotente y no necesita la configuracion de una instalacion. Cuando modifica el plugin, Claude Code debe recargar plugins o reiniciarse para activar sus hooks.
 
 `plan` y `verify` no modifican la instalacion. `apply` reconcilia las postcondiciones y `resume` exige que exista un estado previo. La clave de OpenRouter se lee de la credencial privada local o de la variable indicada por `provider.keyEnv` solo cuando falta en la VPS.
 

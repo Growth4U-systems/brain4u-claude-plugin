@@ -5,11 +5,13 @@ import { initializeInstallation } from './initialize.js';
 import { connectHetznerCommand } from './onboarding.js';
 import { connectOpenRouterCommand } from './openrouter-onboarding.js';
 import { createBrainRepositoryCommand } from './brain-repository.js';
+import { installMemsearchCommand } from './memsearch.js';
 import { redact } from './redact.js';
 
 function usage() {
   return `Usage:
   brain4u-installer init [--installation-id <id>] [--state-dir <path>] [--json]
+  brain4u-installer install-memsearch [--json]
   brain4u-installer plan --config <path> [--state-dir <path>] [--json]
   brain4u-installer apply --config <path> [--approve-infrastructure <code>] [--state-dir <path>] [--json]
   brain4u-installer resume --config <path> [--approve-infrastructure <code>] [--state-dir <path>] [--json]
@@ -33,8 +35,8 @@ function parseArgs(argv) {
     else if (argument === '--approve-infrastructure') options.infrastructureApproval = argv[++index];
     else throw new Error(`Unknown argument: ${argument}`);
   }
-  if (!['init', 'plan', 'apply', 'resume', 'verify', 'connect-openrouter', 'connect-hetzner', 'create-brain'].includes(command)) throw new Error(usage());
-  if (command !== 'init' && !options.configPath) throw new Error('--config is required');
+  if (!['init', 'install-memsearch', 'plan', 'apply', 'resume', 'verify', 'connect-openrouter', 'connect-hetzner', 'create-brain'].includes(command)) throw new Error(usage());
+  if (!['init', 'install-memsearch'].includes(command) && !options.configPath) throw new Error('--config is required');
   options.stateRoot ??= defaultStateRoot();
   return options;
 }
@@ -47,6 +49,10 @@ function renderHuman(result) {
       `SSH key fingerprint: ${result.sshKeyFingerprint}`,
       'No remote changes were made.',
     ].join('\n');
+  }
+  if (result.command === 'install-memsearch') {
+    const status = result.mutationsPerformed ? 'installed and enabled' : 'already installed and enabled';
+    return `MemSearch ${result.version} is ${status} at user scope. Restart Claude Code or run /reload-plugins before using its memory hooks.`;
   }
   if (result.command === 'plan') {
     const lines = result.steps.map((step) => `${step.applied ? 'OK' : 'PENDING'} ${step.id}: ${step.description}`);
@@ -94,6 +100,11 @@ export async function main(argv) {
         stateRoot: options.stateRoot,
         installationId: options.installationId,
       });
+      process.stdout.write(`${options.json ? JSON.stringify(result, null, 2) : renderHuman(result)}\n`);
+      return;
+    }
+    if (options.command === 'install-memsearch') {
+      const result = await installMemsearchCommand();
       process.stdout.write(`${options.json ? JSON.stringify(result, null, 2) : renderHuman(result)}\n`);
       return;
     }

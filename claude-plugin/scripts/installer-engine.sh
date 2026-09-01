@@ -5,10 +5,10 @@ set -Eeuo pipefail
 action="${1:-}"
 
 case "$action" in
-  init) ;;
+  init|install-memsearch) ;;
   connect-openrouter|connect-hetzner|create-brain|plan|apply|resume|verify) ;;
   *)
-    printf 'Usage: installer-engine.sh init [extra options]\n' >&2
+    printf 'Usage: installer-engine.sh <init|install-memsearch> [extra options]\n' >&2
     printf '       installer-engine.sh <connect-openrouter|connect-hetzner|create-brain|plan|apply|resume|verify> <config-path> [extra options]\n' >&2
     exit 2
     ;;
@@ -28,9 +28,9 @@ else
   exit 1
 fi
 
-if [[ "$action" == "init" ]]; then
+if [[ "$action" == "init" || "$action" == "install-memsearch" ]]; then
   shift 1
-  exec node "$engine" init --json "$@"
+  exec node "$engine" "$action" --json "$@"
 fi
 
 config_path="${2:-}"

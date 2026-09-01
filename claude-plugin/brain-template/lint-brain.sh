@@ -8,7 +8,7 @@ for required in CLAUDE.md AGENTS.md INDEX.md gbrain.yml governance/memory-writeb
   test -s "$required" || { printf 'Missing required Brain file: %s\n' "$required" >&2; exit 1; }
 done
 
-if git ls-files | grep -E '(^|/)(\.env($|\.)|raw-context/|inbox/raw/|private-memory/)' >/dev/null; then
+if git ls-files | grep -E '(^|/)(\.env($|\.)|raw-context/|inbox/raw/|private-memory/|\.memsearch/)' >/dev/null; then
   printf 'A forbidden raw, private or environment path is tracked.\n' >&2
   exit 1
 fi

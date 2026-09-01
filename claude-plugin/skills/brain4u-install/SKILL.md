@@ -1,6 +1,6 @@
 ---
 name: brain4u-install
-description: Planifica, instala, reanuda y verifica el MVP autoinstalable de Brain4U mediante un motor determinista, sin aceptar secretos en el chat.
+description: Planifica, instala, reanuda y verifica Brain4U, MemSearch y Hermes mediante un motor determinista, sin aceptar secretos en el chat.
 ---
 
 # Instalar Brain4U
@@ -27,7 +27,21 @@ bash "${CLAUDE_PLUGIN_ROOT}/scripts/preflight.sh"
 
 El script solo inspecciona y devuelve JSON. No instala ni modifica nada.
 
-Si Node 20 o superior, `gh`, `git`, `ssh` o `ssh-keygen` no estan disponibles, detenerse y explicar el requisito antes de continuar. No intentar crear el Brain ni infraestructura con un preflight incompleto. `gh auth status` debe confirmar una sesion GitHub valida.
+Si Claude Code, Node 20 o superior, `gh`, `git`, `ssh` o `ssh-keygen` no estan disponibles, detenerse y explicar el requisito antes de continuar. Para MemSearch, debe estar disponible `uv` o `curl`, que permite preparar `uv` en la primera activacion. No intentar instalar MemSearch, crear el Brain ni crear infraestructura con un preflight incompleto. `gh auth status` debe confirmar una sesion GitHub valida.
+
+## Instalar MemSearch
+
+Antes de crear el Brain, instalar o verificar el plugin oficial de MemSearch:
+
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/installer-engine.sh" install-memsearch
+```
+
+El motor solo acepta el marketplace oficial `zilliztech/memsearch`, instala `memsearch@memsearch-plugins` con alcance de usuario, lo habilita y verifica la postcondicion mediante la salida JSON de Claude Code. Si ya esta activo en una version compatible, no modifica nada. Si detecta otro repositorio usando el nombre `memsearch-plugins` o un MemSearch activo de otro marketplace en el proyecto actual, detenerse. La orquestacion es determinista, pero MemSearch no esta vendorizado: el marketplace oficial y su runtime se descargan desde sus fuentes upstream y pueden recibir versiones compatibles posteriores.
+
+Explicar que MemSearch crea memoria episodica de las sesiones de Claude Code por proyecto. Sus diarios, embeddings e indice viven en el ordenador del usuario y nunca se versionan en el Brain, pero el contenido parseado de cada turno se procesa con Claude Haiku para producir el resumen y puede consumir cuota de Claude. En la primera activacion, MemSearch descarga un modelo local de embeddings de aproximadamente 558 MB. El conocimiento solo pasa a ser memoria canonica del Brain despues de destilarlo, revisar privacidad y aprobarlo mediante pull request.
+
+Continuar con la instalacion de Brain4U y recordar siempre al final que el usuario debe reiniciar Claude Code o ejecutar `/reload-plugins` antes de usar los hooks de MemSearch. `restartRequired` indica si esta ejecucion modifico el plugin, no si la sesion actual ya lo habia cargado.
 
 Preparar la instalacion local mediante el motor:
 
