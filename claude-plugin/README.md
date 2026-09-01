@@ -21,11 +21,13 @@ claude plugin install brain4u-installer@brain4u --scope user
 
 Cuando se publique el repositorio, la primera ruta se sustituira por su URL. No hace falta cambiar el plugin.
 
-El plugin instala automaticamente MemSearch como memoria episodica local de Claude Code. Sus hooks guardan los archivos por proyecto en `.memsearch/` y ejecutan los embeddings y el indice semantico en local. Para crear el resumen, el contenido parseado de cada turno se procesa con Claude Haiku y puede consumir cuota de Claude. En la primera activacion se descarga el modelo ONNX bge-m3, de aproximadamente 558 MB. Los embeddings no requieren una clave adicional.
+Durante el recorrido, el plugin intenta instalar automaticamente MemSearch como memoria episodica local de Claude Code y verifica que quede habilitado. Esta integracion es fail-open: un fallo, una colision de marketplace o una restriccion del entorno genera una advertencia, pero no impide crear el Brain ni instalar Hermes. Sus hooks guardan los archivos por proyecto en `.memsearch/` y ejecutan los embeddings y el indice semantico en local. Para crear el resumen, el contenido parseado de cada turno se procesa con Claude Haiku y puede consumir cuota de Claude. En la primera activacion se descarga el modelo ONNX bge-m3, de aproximadamente 558 MB. Los embeddings no requieren una clave adicional.
 
 Despues crea un repositorio privado `brain4u` en la cuenta GitHub del usuario y carga la plantilla vacia incluida: LLM Wiki, configuracion GBrain read-only, reglas y workflows inspirados en GStack, gobernanza, privacidad, hooks, skills de memoria, lint y escritura por pull request. Registra una clave de despliegue dedicada para ese repositorio. A continuacion prepara la configuracion, abre paginas locales para conectar OpenRouter y Hetzner, consulta el precio vigente y exige una confirmacion concreta antes de crear infraestructura. Una vez confirmado, provisiona la VPS, clona el Brain, lo monta en Hermes como `/opt/brain`, instala el runtime y verifica la conexion completa.
 
 MemSearch no escribe directamente en el Brain. Sus archivos y su indice permanecen en el ordenador del usuario y `.memsearch/` esta excluido de git. Solo los aprendizajes destilados, revisados y aprobados se incorporan al Brain mediante un pull request. Hermes lee el repositorio Brain montado en la VPS, no el indice local de MemSearch.
+
+El motor tambien detecta una instalacion activa de `claude-mem`. Informa del posible solapamiento de memoria, sin desinstalarla ni deshabilitarla. Para un ordenador offline o sometido a gestion centralizada, el recorrido permite omitir MemSearch de forma explicita y continuar.
 
 ## Dependencias del cliente
 
@@ -33,7 +35,7 @@ MemSearch no escribe directamente en el Brain. Sus archivos y su indice permanec
 - GitHub CLI (`gh`) con una sesion autenticada.
 - Node.js 20 o superior.
 - OpenSSH con `ssh-keygen`.
-- `uv` o `curl` para preparar el runtime local de MemSearch en su primera activacion.
+- `uv` o `curl` para preparar el runtime local de MemSearch en su primera activacion, solo cuando se habilita esta capa opcional.
 - Una cuenta de OpenRouter, que puede crearse durante el recorrido.
 - Una cuenta de Hetzner con facturacion habilitada, que puede crearse durante el recorrido.
 
@@ -59,3 +61,4 @@ claude plugin validate --strict .
 - Los archivos e indices locales de MemSearch no se versionan ni se copian automaticamente al Brain.
 - Los resumenes creados con Claude Haiku son material de trabajo, no memoria canonica hasta su aprobacion por pull request.
 - MemSearch se descarga desde su marketplace oficial y prepara su runtime desde fuentes upstream; no esta vendorizado ni fijado a un commit por Brain4U.
+- Un fallo de MemSearch no bloquea el Brain. El instalador conserva cualquier `claude-mem` existente y limita su actuacion a advertir del posible solapamiento.

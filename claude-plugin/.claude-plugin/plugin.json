@@ -1,6 +1,6 @@
 {
   "name": "brain4u-installer",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Instalador guiado de Brain4U para Claude Code, con MemSearch, repositorio privado, Hermes en VPS propia y ejecucion reanudable.",
   "author": {
     "name": "Growth4U"

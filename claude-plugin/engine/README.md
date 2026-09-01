@@ -6,7 +6,8 @@ Motor determinista separado de Claude Code. Su estado no contiene credenciales y
 
 ```bash
 node ./bin/brain4u-installer.js init
-node ./bin/brain4u-installer.js install-memsearch
+node ./bin/brain4u-installer.js install-memsearch --optional
+node ./bin/brain4u-installer.js install-memsearch --skip-memsearch
 node ./bin/brain4u-installer.js create-brain --config /ruta/absoluta/config.json
 node ./bin/brain4u-installer.js plan --config /ruta/absoluta/config.json
 node ./bin/brain4u-installer.js apply --config /ruta/absoluta/config.json
@@ -17,7 +18,13 @@ node ./bin/brain4u-installer.js connect-openrouter --config /ruta/absoluta/confi
 
 `init` crea la configuracion privada y una clave SSH dedicada en el ordenador del usuario. Detecta la IPv4 publica mediante `api.ipify.org` para limitar el acceso SSH a ese origen. No contacta Hetzner ni crea recursos remotos.
 
-`install-memsearch` valida el marketplace oficial `zilliztech/memsearch`, instala o actualiza `memsearch@memsearch-plugins` con alcance de usuario, lo habilita y comprueba el resultado. Es idempotente y no necesita la configuracion de una instalacion. Cuando modifica el plugin, Claude Code debe recargar plugins o reiniciarse para activar sus hooks.
+`install-memsearch --optional` valida el marketplace oficial `zilliztech/memsearch`, instala o actualiza `memsearch@memsearch-plugins` con alcance de usuario, lo habilita y vuelve a leer el estado de Claude Code. Solo informa que MemSearch esta listo cuando la postcondicion confirma `enabled: true`. Es idempotente y no necesita la configuracion de una instalacion.
+
+MemSearch es una mejora opcional y el recorrido es fail-open. Si hay un fallo de red, una colision de marketplace, una version incompatible o una politica que impide modificar plugins, el comando devuelve una advertencia estructurada y la instalacion del Brain continua. `install-memsearch --skip-memsearch` registra la omision deliberada sin contactar el marketplace ni modificar plugins, pensado para equipos offline o administrados.
+
+El motor inspecciona tambien los plugins activos para detectar `claude-mem`. Si aparece, informa del posible solapamiento de captura, pero nunca lo desinstala ni lo deshabilita. La decision de conservar o cambiar ese plugin queda fuera del instalador Brain4U.
+
+Esta orquestacion pertenece al motor local porque modifica y verifica el estado de plugins de Claude Code. No debe trasladarse a los hooks de `brain-template`: esos hooks forman parte del repositorio Brain y aplican su frontera de captura, pero no instalan software, no administran marketplaces y no controlan la configuracion local de Claude Code. Cuando MemSearch cambia, Claude Code debe recargar plugins o reiniciarse para activar sus hooks.
 
 `plan` y `verify` no modifican la instalacion. `apply` reconcilia las postcondiciones y `resume` exige que exista un estado previo. La clave de OpenRouter se lee de la credencial privada local o de la variable indicada por `provider.keyEnv` solo cuando falta en la VPS.
 

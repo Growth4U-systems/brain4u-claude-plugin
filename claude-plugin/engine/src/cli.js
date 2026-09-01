@@ -11,7 +11,7 @@ import { redact } from './redact.js';
 function usage() {
   return `Usage:
   brain4u-installer init [--installation-id <id>] [--state-dir <path>] [--json]
-  brain4u-installer install-memsearch [--json]
+  brain4u-installer install-memsearch [--optional] [--skip-memsearch] [--json]
   brain4u-installer plan --config <path> [--state-dir <path>] [--json]
   brain4u-installer apply --config <path> [--approve-infrastructure <code>] [--state-dir <path>] [--json]
   brain4u-installer resume --config <path> [--approve-infrastructure <code>] [--state-dir <path>] [--json]
@@ -24,11 +24,19 @@ function usage() {
 
 function parseArgs(argv) {
   const command = argv[0];
-  const options = { command, json: false, smokeInference: false };
+  const options = {
+    command,
+    json: false,
+    smokeInference: false,
+    optionalMemsearch: false,
+    skipMemsearch: false,
+  };
   for (let index = 1; index < argv.length; index += 1) {
     const argument = argv[index];
     if (argument === '--json') options.json = true;
     else if (argument === '--smoke-inference') options.smokeInference = true;
+    else if (argument === '--optional') options.optionalMemsearch = true;
+    else if (argument === '--skip-memsearch') options.skipMemsearch = true;
     else if (argument === '--config') options.configPath = argv[++index];
     else if (argument === '--state-dir') options.stateRoot = argv[++index];
     else if (argument === '--installation-id') options.installationId = argv[++index];
@@ -37,6 +45,9 @@ function parseArgs(argv) {
   }
   if (!['init', 'install-memsearch', 'plan', 'apply', 'resume', 'verify', 'connect-openrouter', 'connect-hetzner', 'create-brain'].includes(command)) throw new Error(usage());
   if (!['init', 'install-memsearch'].includes(command) && !options.configPath) throw new Error('--config is required');
+  if (command !== 'install-memsearch' && (options.optionalMemsearch || options.skipMemsearch)) {
+    throw new Error('--optional and --skip-memsearch are only valid with install-memsearch');
+  }
   options.stateRoot ??= defaultStateRoot();
   return options;
 }
@@ -51,6 +62,13 @@ function renderHuman(result) {
     ].join('\n');
   }
   if (result.command === 'install-memsearch') {
+    if (result.status === 'skipped') return 'MemSearch was skipped by request. Brain4U installation can continue.';
+    if (result.componentOk === false) {
+      const repair = result.repairCommands?.length
+        ? `\nRepair later:\n${result.repairCommands.join('\n')}`
+        : '';
+      return `MemSearch was not installed: ${result.error.message}\nBrain4U installation can continue.${repair}`;
+    }
     const status = result.mutationsPerformed ? 'installed and enabled' : 'already installed and enabled';
     return `MemSearch ${result.version} is ${status} at user scope. Restart Claude Code or run /reload-plugins before using its memory hooks.`;
   }
@@ -104,7 +122,10 @@ export async function main(argv) {
       return;
     }
     if (options.command === 'install-memsearch') {
-      const result = await installMemsearchCommand();
+      const result = await installMemsearchCommand({
+        continueOnError: options.optionalMemsearch,
+        skip: options.skipMemsearch,
+      });
       process.stdout.write(`${options.json ? JSON.stringify(result, null, 2) : renderHuman(result)}\n`);
       return;
     }

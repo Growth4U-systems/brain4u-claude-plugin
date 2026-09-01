@@ -1,6 +1,6 @@
 ---
 name: brain4u-install
-description: Planifica, instala, reanuda y verifica Brain4U, MemSearch y Hermes mediante un motor determinista, sin aceptar secretos en el chat.
+description: Planifica, instala, reanuda y verifica Brain4U y Hermes mediante un motor determinista, con MemSearch local opcional y sin aceptar secretos en el chat.
 ---
 
 # Instalar Brain4U
@@ -16,6 +16,7 @@ Esta skill usa Claude Code como interfaz conversacional de un instalador determi
 5. Usar `resume` despues de una interrupcion. No improvisar comandos para saltarse un paso fallido.
 6. Ejecutar `verify` antes de declarar que la instalacion termino.
 7. Nunca editar el archivo de estado a mano.
+8. Tratar MemSearch como una mejora opcional. Un fallo o conflicto suyo se advierte, pero nunca bloquea la creacion del Brain ni la instalacion de Hermes.
 
 ## Preflight
 
@@ -27,21 +28,35 @@ bash "${CLAUDE_PLUGIN_ROOT}/scripts/preflight.sh"
 
 El script solo inspecciona y devuelve JSON. No instala ni modifica nada.
 
-Si Claude Code, Node 20 o superior, `gh`, `git`, `ssh` o `ssh-keygen` no estan disponibles, detenerse y explicar el requisito antes de continuar. Para MemSearch, debe estar disponible `uv` o `curl`, que permite preparar `uv` en la primera activacion. No intentar instalar MemSearch, crear el Brain ni crear infraestructura con un preflight incompleto. `gh auth status` debe confirmar una sesion GitHub valida.
+Si Claude Code, Node 20 o superior, `gh`, `git`, `ssh` o `ssh-keygen` no estan disponibles, detenerse y explicar el requisito antes de continuar. `gh auth status` debe confirmar una sesion GitHub valida. Para MemSearch, `uv` o `curl` permiten preparar `uv` en la primera activacion. Si ambos aparecen como no disponibles, usar el modo `--skip-memsearch`, explicarlo y continuar con el Brain.
 
 ## Instalar MemSearch
 
-Antes de crear el Brain, instalar o verificar el plugin oficial de MemSearch:
+Antes de crear el Brain, intentar instalar o verificar el plugin oficial de MemSearch en modo opcional:
 
 ```bash
-bash "${CLAUDE_PLUGIN_ROOT}/scripts/installer-engine.sh" install-memsearch
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/installer-engine.sh" install-memsearch --optional
 ```
 
-El motor solo acepta el marketplace oficial `zilliztech/memsearch`, instala `memsearch@memsearch-plugins` con alcance de usuario, lo habilita y verifica la postcondicion mediante la salida JSON de Claude Code. Si ya esta activo en una version compatible, no modifica nada. Si detecta otro repositorio usando el nombre `memsearch-plugins` o un MemSearch activo de otro marketplace en el proyecto actual, detenerse. La orquestacion es determinista, pero MemSearch no esta vendorizado: el marketplace oficial y su runtime se descargan desde sus fuentes upstream y pueden recibir versiones compatibles posteriores.
+Si el usuario pide una instalacion offline, indica que su equipo administra los plugins o solicita expresamente no instalar MemSearch, ejecutar en su lugar:
+
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/installer-engine.sh" install-memsearch --skip-memsearch
+```
+
+El modo omitido no debe contactar marketplaces ni modificar plugins. En ambos casos, continuar despues con `init`.
+
+En modo opcional, el motor solo acepta el marketplace oficial `zilliztech/memsearch`, instala o actualiza `memsearch@memsearch-plugins` con alcance de usuario, lo habilita y verifica la postcondicion mediante la salida JSON de Claude Code. Solo describir MemSearch como operativo cuando el resultado confirme `enabled: true`. Si ya esta activo en una version compatible, no modifica nada. La orquestacion es determinista, pero MemSearch no esta vendorizado: el marketplace oficial y su runtime se descargan desde sus fuentes upstream y pueden recibir versiones compatibles posteriores.
+
+Si la instalacion devuelve una advertencia, falla la descarga, detecta un origen inesperado o no consigue dejar el plugin habilitado, explicar brevemente que la memoria episodica local no quedo disponible y continuar con la instalacion del Brain. No reintentar en bucle, no editar la configuracion de Claude Code a mano y no convertir ese fallo en un bloqueo del recorrido.
+
+Si el motor detecta `claude-mem`, advertir que dos sistemas de memoria pueden duplicar captura y consumo. Nunca desinstalarlo, deshabilitarlo ni modificar su configuracion. Esa decision pertenece al usuario o al administrador del equipo y no afecta a la continuidad de Brain4U.
 
 Explicar que MemSearch crea memoria episodica de las sesiones de Claude Code por proyecto. Sus diarios, embeddings e indice viven en el ordenador del usuario y nunca se versionan en el Brain, pero el contenido parseado de cada turno se procesa con Claude Haiku para producir el resumen y puede consumir cuota de Claude. En la primera activacion, MemSearch descarga un modelo local de embeddings de aproximadamente 558 MB. El conocimiento solo pasa a ser memoria canonica del Brain despues de destilarlo, revisar privacidad y aprobarlo mediante pull request.
 
-Continuar con la instalacion de Brain4U y recordar siempre al final que el usuario debe reiniciar Claude Code o ejecutar `/reload-plugins` antes de usar los hooks de MemSearch. `restartRequired` indica si esta ejecucion modifico el plugin, no si la sesion actual ya lo habia cargado.
+La instalacion y verificacion de MemSearch debe permanecer en el motor local. No trasladarla a los hooks incluidos en `brain-template`: esos hooks gobiernan la frontera de captura del repositorio, pero no deben descargar software ni modificar marketplaces o plugins de Claude Code.
+
+Continuar con la instalacion de Brain4U. Si el resultado confirma `componentOk: true` y `reloadRecommended: true`, recordar al final que el usuario debe reiniciar Claude Code o ejecutar `/reload-plugins` antes de usar los hooks. `restartRequired` indica si esta ejecucion modifico el plugin, mientras que `reloadRecommended` evita asumir que la sesion actual ya lo habia cargado.
 
 Preparar la instalacion local mediante el motor:
 

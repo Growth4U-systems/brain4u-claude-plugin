@@ -38,6 +38,11 @@ if ! grep -Fxq '.memsearch/' "$plugin_root/brain-template/.gitignore"; then
   exit 1
 fi
 
+if ! grep -Fq 'install-memsearch --optional' "$plugin_root/skills/brain4u-install/SKILL.md"; then
+  printf 'The Brain4U install skill must include the optional MemSearch step.\n' >&2
+  exit 1
+fi
+
 if grep -R -n --exclude='self-test.sh' --fixed-strings '$CLAUDE_PLUGIN_ROOT/../engine' "$plugin_root" >/dev/null; then
   printf 'The package still references an engine outside the plugin.\n' >&2
   exit 1
