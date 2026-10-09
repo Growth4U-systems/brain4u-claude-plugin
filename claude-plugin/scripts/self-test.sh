@@ -19,6 +19,12 @@ required_files=(
   "$plugin_root/vps/bootstrap-docker.sh"
   "$plugin_root/vps/deploy-hermes.sh"
   "$plugin_root/vps/smoke-hermes.sh"
+  "$plugin_root/vps/sync-brain.sh"
+  "$plugin_root/docs/messaging.md"
+  "$plugin_root/brain-template/agents/chief-of-staff/SOUL.md"
+  "$plugin_root/brain-template/scripts/update-brain4u.mjs"
+  "$plugin_root/brain-template/scripts/publish-memory.mjs"
+  "$plugin_root/brain-template/.brain4u-distribution.json"
   "$plugin_root/contracts/slack-manifest.json"
   "$plugin_root/contracts/google-scopes.json"
 )

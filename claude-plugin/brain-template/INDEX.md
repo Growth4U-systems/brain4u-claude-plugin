@@ -12,6 +12,7 @@
 
 ## Behavior
 
+- [Chief of Staff](agents/chief-of-staff/SOUL.md) and [operating rules](agents/chief-of-staff/OPERATIONS.md)
 - [Agents](agents/README.md)
 - [Skills](skills/README.md)
 - [Commands](commands/README.md)

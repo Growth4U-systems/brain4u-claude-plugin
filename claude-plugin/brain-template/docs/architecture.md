@@ -9,13 +9,16 @@ MemSearch is the episodic memory layer for Claude Code. Memory files live under 
 ```text
 Claude Code session -> MemSearch local files and index
                                   |
-                                  | explicit distillation and approval
+                                  | verified distillation and authorization
                                   v
-Sources -> redaction -> proposal -> pull request -> Brain4U -> Hermes
+Sources -> redaction -> sourced record -> verified publication -> Brain4U -> Hermes
+Behavior changes -> focused pull request -> human review -> Brain4U
 ```
 
-MemSearch does not write directly to Brain4U. A generated summary is evidence for review, not canonical knowledge. Only a durable, sourced and privacy-safe learning approved through a pull request enters the Brain.
+MemSearch does not write directly to Brain4U. A generated summary points to evidence, not canonical knowledge. Authorized, sourced learning and decision records use the memory publication helper; changes to agent behavior and policy require a reviewed pull request.
 
 The Brain repository is cloned into the VPS and mounted in Hermes as `/opt/brain`. Hermes reads that repository and its rules. It cannot read the MemSearch index on the user's computer.
 
 Raw source data, `.memsearch/`, semantic index files and live operational state remain outside git.
+
+The default role is Chief of Staff, defined under `agents/chief-of-staff/` and referenced in the root agent rules and runtime prompt. The template's `scripts/` helpers publish authorized memory and apply official stable logic updates while preserving company knowledge and local customizations. See `docs/updates.md` for conditions and limits.

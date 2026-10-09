@@ -16,6 +16,10 @@ jobs:
       - name: Validate shell syntax
         run: bash -n install.sh
       - name: Check the one-command entry point
-        run: node --test tests/bootstrap.test.mjs
+        run: node --test tests/*.test.mjs
       - name: Check the packaged installation engine and template
         run: bash claude-plugin/scripts/self-test.sh
+      - name: Check the published logic manifest is current
+        run: |
+          node tools/build-distribution.mjs
+          git diff --exit-code -- distribution/brain-template-manifest.json claude-plugin/brain-template/.brain4u-distribution.json

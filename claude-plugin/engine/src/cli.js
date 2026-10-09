@@ -18,7 +18,7 @@ function usage() {
   brain4u-installer verify --config <path> [--smoke-inference] [--json]
   brain4u-installer connect-openrouter --config <path> [--state-dir <path>] [--json]
   brain4u-installer connect-hetzner --config <path> [--state-dir <path>] [--json]
-  brain4u-installer create-brain --config <path> [--json]
+  brain4u-installer create-brain --config <path> [--brain-only] [--json]
 `;
 }
 
@@ -30,6 +30,7 @@ function parseArgs(argv) {
     smokeInference: false,
     optionalMemsearch: false,
     skipMemsearch: false,
+    brainOnly: false,
   };
   for (let index = 1; index < argv.length; index += 1) {
     const argument = argv[index];
@@ -37,6 +38,7 @@ function parseArgs(argv) {
     else if (argument === '--smoke-inference') options.smokeInference = true;
     else if (argument === '--optional') options.optionalMemsearch = true;
     else if (argument === '--skip-memsearch') options.skipMemsearch = true;
+    else if (argument === '--brain-only') options.brainOnly = true;
     else if (argument === '--config') options.configPath = argv[++index];
     else if (argument === '--state-dir') options.stateRoot = argv[++index];
     else if (argument === '--installation-id') options.installationId = argv[++index];
@@ -49,6 +51,7 @@ function parseArgs(argv) {
     throw new Error('--optional and --skip-memsearch are only valid with install-memsearch');
   }
   options.stateRoot ??= defaultStateRoot();
+  if (options.brainOnly && command !== 'create-brain') throw new Error('--brain-only is only valid with create-brain');
   return options;
 }
 
@@ -100,6 +103,7 @@ function renderHuman(result) {
       : `OpenRouter connected for ${result.installationId}. Return to Claude Code to connect Hetzner.`;
   }
   if (result.command === 'create-brain') {
+    if (!result.runtimeAccessConfigured) return `Private Brain repository ready: ${result.url}. Hermes was not installed or connected.`;
     return result.alreadyExisted
       ? `Brain repository and runtime access verified: ${result.url}`
       : `Private Brain repository and runtime access created: ${result.url}`;
@@ -129,9 +133,9 @@ export async function main(argv) {
       process.stdout.write(`${options.json ? JSON.stringify(result, null, 2) : renderHuman(result)}\n`);
       return;
     }
-    const loaded = await loadConfig(options.configPath);
+    const loaded = await loadConfig(options.configPath, { requireBrainDeployKey: options.command !== 'create-brain' });
     if (options.command === 'create-brain') {
-      const result = await createBrainRepositoryCommand({ config: loaded.config, configPath: loaded.configPath });
+      const result = await createBrainRepositoryCommand({ config: loaded.config, configPath: loaded.configPath, connectRuntime: !options.brainOnly });
       process.stdout.write(`${options.json ? JSON.stringify(result, null, 2) : renderHuman(result)}\n`);
       return;
     }

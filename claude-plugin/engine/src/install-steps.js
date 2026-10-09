@@ -32,7 +32,7 @@ export function buildInstallSteps(config) {
   const composeHash = sha256(compose);
   const configHash = sha256(hermesConfig);
   const brainCoreCheck = config.brain?.sshUrl
-    ? `; test -f /opt/brain4u/brain/.brain4u-template-version; test "$(git -C /opt/brain4u/brain remote get-url origin)" = ${config.brain.sshUrl}; test "$(docker inspect brain4u-hermes-spike --format '{{.Config.WorkingDir}}')" = /opt/brain; docker exec brain4u-hermes-spike test -f /opt/brain/INDEX.md`
+    ? `; test -f /opt/brain4u/brain/.brain4u-template-version; test "$(git -c safe.directory=/opt/brain4u/brain -C /opt/brain4u/brain remote get-url origin)" = ${config.brain.sshUrl}; test "$(docker inspect brain4u-hermes-spike --format '{{.Config.WorkingDir}}')" = /opt/brain; systemctl is-active --quiet brain4u-sync.timer; docker exec --user hermes brain4u-hermes-spike sh -c 'test -r /opt/brain/INDEX.md && test -w /opt/brain && test -r /opt/brain4u-ssh/brain-deploy-key'`
     : '';
 
   return [
@@ -68,7 +68,7 @@ export function buildInstallSteps(config) {
       check: async () => {
         const deployKey = await readFile(config.brain.deployKeyFile);
         const deployKeyHash = sha256(deployKey);
-        return await commandSucceeds(config, `set -e; test "$(sha256sum /opt/brain4u/secrets/ssh/brain-deploy-key 2>/dev/null | awk '{print $1}')" = ${deployKeyHash}; test -f /opt/brain4u/secrets/ssh/known_hosts; test -f /opt/brain4u/brain/.brain4u-template-version; test "$(git -C /opt/brain4u/brain remote get-url origin)" = ${config.brain.sshUrl}; GIT_SSH_COMMAND='ssh -i /opt/brain4u/secrets/ssh/brain-deploy-key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=/opt/brain4u/secrets/ssh/known_hosts' git -C /opt/brain4u/brain ls-remote origin HEAD >/dev/null`);
+        return await commandSucceeds(config, `set -e; test "$(sha256sum /opt/brain4u/secrets/ssh/brain-deploy-key 2>/dev/null | awk '{print $1}')" = ${deployKeyHash}; test -f /opt/brain4u/secrets/ssh/known_hosts; test -f /opt/brain4u/brain/.brain4u-template-version; test "$(git -c safe.directory=/opt/brain4u/brain -C /opt/brain4u/brain remote get-url origin)" = ${config.brain.sshUrl}; GIT_SSH_COMMAND='ssh -i /opt/brain4u/secrets/ssh/brain-deploy-key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=/opt/brain4u/secrets/ssh/known_hosts' git -c safe.directory=/opt/brain4u/brain -C /opt/brain4u/brain ls-remote origin HEAD >/dev/null`);
       },
       run: async () => {
         const deployKey = await readFile(config.brain.deployKeyFile, 'utf8');
@@ -89,10 +89,10 @@ if [[ ! -d /opt/brain4u/brain/.git ]]; then
   git clone --branch main --single-branch ${config.brain.sshUrl} /opt/brain4u/brain
 fi
 test -f /opt/brain4u/brain/.brain4u-template-version
-test "$(git -C /opt/brain4u/brain remote get-url origin)" = ${config.brain.sshUrl}
-git -C /opt/brain4u/brain config user.name Brain4U
-git -C /opt/brain4u/brain config user.email brain4u@users.noreply.github.com
-git -C /opt/brain4u/brain ls-remote origin HEAD >/dev/null
+test "$(git -c safe.directory=/opt/brain4u/brain -C /opt/brain4u/brain remote get-url origin)" = ${config.brain.sshUrl}
+git -c safe.directory=/opt/brain4u/brain -C /opt/brain4u/brain config user.name Brain4U
+git -c safe.directory=/opt/brain4u/brain -C /opt/brain4u/brain config user.email brain4u@users.noreply.github.com
+git -c safe.directory=/opt/brain4u/brain -C /opt/brain4u/brain ls-remote origin HEAD >/dev/null
 `;
         await runSsh(config, 'bash -s', { input: remoteCommand, timeoutMs: 120_000 });
       },
@@ -131,8 +131,11 @@ grep -q '^API_SERVER_HOST=' /opt/brain4u/hermes/data/.env || printf 'API_SERVER_
     {
       id: 'hermes_service',
       description: 'Start Hermes and wait for health',
-      check: async () => await commandSucceeds(config, `test \"$(docker inspect brain4u-hermes-spike --format '{{.State.Status}}' 2>/dev/null)\" = running && test \"$(docker inspect brain4u-hermes-spike --format '{{.Config.Image}}' 2>/dev/null)\" = ${config.hermes.image} && curl -fsS --max-time 3 http://127.0.0.1:8642/health >/dev/null`),
+      check: async () => await commandSucceeds(config, `set -e; test \"$(docker inspect brain4u-hermes-spike --format '{{.State.Status}}' 2>/dev/null)\" = running; test \"$(docker inspect brain4u-hermes-spike --format '{{.Config.Image}}' 2>/dev/null)\" = ${config.hermes.image}; curl -fsS --max-time 3 http://127.0.0.1:8642/health >/dev/null${brainCoreCheck}`),
       run: async () => {
+        if (config.brain?.sshUrl) {
+          await uploadText(config, '/opt/brain4u/sync-brain.sh', await script('sync-brain.sh'), '0755');
+        }
         await runSsh(config, 'bash -s', { input: await script('deploy-hermes.sh') });
         for (let attempt = 0; attempt < 10; attempt += 1) {
           if (await commandSucceeds(config, 'curl -fsS --max-time 3 http://127.0.0.1:8642/health >/dev/null')) return;

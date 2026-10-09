@@ -52,7 +52,7 @@ Si la instalacion devuelve una advertencia, falla la descarga, detecta un origen
 
 Si el motor detecta `claude-mem`, advertir que dos sistemas de memoria pueden duplicar captura y consumo. Nunca desinstalarlo, deshabilitarlo ni modificar su configuracion. Esa decision pertenece al usuario o al administrador del equipo y no afecta a la continuidad de Brain4U.
 
-Explicar que MemSearch crea memoria episodica de las sesiones de Claude Code por proyecto. Sus diarios, embeddings e indice viven en el ordenador del usuario y nunca se versionan en el Brain, pero el contenido parseado de cada turno se procesa con Claude Haiku para producir el resumen y puede consumir cuota de Claude. En la primera activacion, MemSearch descarga un modelo local de embeddings de aproximadamente 558 MB. El conocimiento solo pasa a ser memoria canonica del Brain despues de destilarlo, revisar privacidad y aprobarlo mediante pull request.
+Explicar que MemSearch crea memoria episodica de las sesiones de Claude Code por proyecto. Sus diarios, embeddings e indice viven en el ordenador del usuario y nunca se versionan en el Brain, pero el contenido parseado de cada turno se procesa con Claude Haiku para producir el resumen y puede consumir cuota de Claude. En la primera activacion, MemSearch descarga un modelo local de embeddings de aproximadamente 558 MB. El conocimiento solo pasa a ser memoria canonica despues de destilarlo, verificar sus fuentes, revisar privacidad y confirmar su publicacion autorizada. Los cambios de comportamiento requieren un pull request revisado.
 
 La instalacion y verificacion de MemSearch debe permanecer en el motor local. No trasladarla a los hooks incluidos en `brain-template`: esos hooks gobiernan la frontera de captura del repositorio, pero no deben descargar software ni modificar marketplaces o plugins de Claude Code.
 
@@ -69,6 +69,12 @@ Explicar antes que este paso crea una clave SSH dedicada solo si falta, detecta 
 Si la preparacion de la clave falla y hace falta diagnosticarla de forma aislada, se puede usar `scripts/prepare-local.sh` como herramienta de recuperacion. No es parte del recorrido normal.
 
 ## Crear el Brain privado
+
+Explicar primero que Brain es la memoria y Hermes el runtime. Ofrecer tres caminos: instalar ambos, crear solo el Brain o conectar un Hermes existente. Slack y Google Chat son conexiones opcionales posteriores. No instalar Sancho ni Mission Control.
+
+Si el usuario elige solo Brain o ya tiene Hermes, usar `create-brain` con `--brain-only`. En ese modo no se genera ni registra la clave de acceso del runtime. Para solo Brain, entregar la URL verificada y detenerse antes de los proveedores, `plan` y `apply`. No describir Hermes como instalado.
+
+Para Hermes existente, conservar perfil, proveedor y secretos. La conexión es asistida y no está implementada como reconciliación automática del motor. Seguir `docs/messaging.md` del plugin y verificar acceso al Brain antes de declarar éxito; no improvisar la creación de una VPS adicional.
 
 Despues de `init` y antes de conectar proveedores, crear el repositorio privado propiedad del usuario:
 
@@ -133,3 +139,9 @@ No declarar exito si `verify` devuelve `ok: false` o contiene fallos.
 Durante `apply`, el motor clona el repositorio privado en `/opt/brain4u/brain`, monta ese directorio en Hermes como `/opt/brain` y configura ese path como directorio de trabajo. Hermes empieza por `INDEX.md`, sigue las reglas del repositorio y puede trabajar sobre la memoria durable. `verify` debe comprobar el marcador Brain4U, el origen Git, el montaje y el directorio de trabajo, ademas de la salud del runtime.
 
 Al terminar, informar tambien la URL devuelta por `create-brain` y explicar que ese repositorio es la memoria durable propiedad del usuario. Hermes es el runtime del agente y la VPS es su entorno persistente.
+
+## Conectar el canal elegido
+
+Después de verificar el runtime nuevo, seguir `docs/messaging.md` del plugin para Slack o Google Chat. Explicar qué cuentas y permisos debe aportar el usuario. Los tokens se introducen en el asistente privado de Hermes, nunca en Claude ni en GitHub. No confundir Google Chat con el contrato de Gmail, Drive y Calendar.
+
+Comprobar una respuesta real y una decisión sintética recuperada antes de marcar un canal como operativo. Si el usuario prefiere hacerlo más tarde, entregar el Brain y el estado del runtime, con el canal pendiente, sin bloquear los componentes ya verificados.

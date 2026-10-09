@@ -164,9 +164,11 @@ printf 'env_mode=%s\\n' "$(stat -c %a /opt/brain4u/hermes/data/.env)"
 printf 'canary=%s\\n' "$(sha256sum /opt/brain4u/hermes/data/verification/persistence-canary.txt | awk '{print $1}')"
 printf 'health=%s\\n' "$(curl -fsS --max-time 3 http://127.0.0.1:8642/health | jq -c .)"
 ${resolvedConfig.brain?.sshUrl ? `printf 'brain_marker=%s\\n' "$(test -f /opt/brain4u/brain/.brain4u-template-version && printf present || printf missing)"
-printf 'brain_origin=%s\\n' "$(git -C /opt/brain4u/brain remote get-url origin 2>/dev/null || true)"
+printf 'brain_origin=%s\\n' "$(git -c safe.directory=/opt/brain4u/brain -C /opt/brain4u/brain remote get-url origin 2>/dev/null || true)"
 printf 'brain_workdir=%s\\n' "$(docker inspect brain4u-hermes-spike --format '{{.Config.WorkingDir}}')"
 printf 'brain_mounted=%s\\n' "$(docker exec brain4u-hermes-spike sh -c 'test -f /opt/brain/INDEX.md && printf true || printf false')"
+printf 'brain_runtime_access=%s\\n' "$(docker exec --user hermes brain4u-hermes-spike sh -c 'test -r /opt/brain/INDEX.md && test -w /opt/brain && test -r /opt/brain4u-ssh/brain-deploy-key && printf true || printf false')"
+printf 'brain_sync=%s\\n' "$(systemctl is-active brain4u-sync.timer 2>/dev/null || true)"
 ` : ''}provider_key="$(sed -n 's/^OPENROUTER_API_KEY=//p' /opt/brain4u/hermes/data/.env)"
 if docker logs brain4u-hermes-spike 2>&1 | grep -Fq "$provider_key"; then printf 'secret_in_logs=true\\n'; else printf 'secret_in_logs=false\\n'; fi
 unset provider_key
@@ -199,6 +201,8 @@ unset provider_key
     if (checks.brain_origin !== resolvedConfig.brain.sshUrl) failures.push('brain_origin');
     if (checks.brain_workdir !== '/opt/brain') failures.push('brain_workdir');
     if (checks.brain_mounted !== 'true') failures.push('brain_mount');
+    if (checks.brain_runtime_access !== 'true') failures.push('brain_runtime_permissions');
+    if (checks.brain_sync !== 'active') failures.push('brain_sync_timer');
   }
 
   let smoke = null;
@@ -227,6 +231,8 @@ unset provider_key
         markerPresent: checks.brain_marker === 'present',
         origin: checks.brain_origin,
         mountedInHermes: checks.brain_mounted === 'true',
+        runtimeCanReadAndWrite: checks.brain_runtime_access === 'true',
+        automaticSyncActive: checks.brain_sync === 'active',
         hermesWorkingDirectory: checks.brain_workdir,
       } : null,
     },
