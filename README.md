@@ -2,11 +2,17 @@
 
 Instala un Company Brain que aprende de tu contexto y conserva la experiencia que tus agentes necesitan para tomar mejores decisiones. Su agente predeterminado es un Chief of Staff con memoria privada propiedad de tu empresa.
 
-La distribución está preparada como plugin de Claude Code. El repositorio del instalador y el Brain de cada usuario son independientes. **La versión 0.4.0 de esta rama todavía no es una release pública validada.** Consulta [el estado de las pruebas](docs/release-verification.md) antes de compartir un comando de instalación.
+Distribución piloto 0.4.0 como plugin de Claude Code. El repositorio del instalador y el Brain privado de cada usuario son independientes. Consulta [el alcance y las pruebas](docs/release-verification.md): las conexiones a proveedores, el despliegue en tu servidor y los canales se comprueban en tu propia instalación.
 
 ## Un comando y un wizard
 
-`install.sh` registra el marketplace, instala y comprueba el plugin y abre `/brain4u-installer:brain4u-install`. Al recibir el script con `curl | bash`, conecta el wizard a la terminal interactiva. El comando definitivo se publicará una vez verificada la descarga anónima del script y del marketplace.
+Con los requisitos de abajo instalados, ejecuta en una terminal interactiva:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Growth4U-systems/brain4u-claude-plugin/v0.4.0/install.sh | bash
+```
+
+`install.sh` registra el marketplace, instala y comprueba el plugin y abre `/brain4u-installer:brain4u-install`. Al recibir el script con `curl | bash`, conecta el wizard a la terminal interactiva. La entrada está fijada a la release 0.4.0; el marketplace instala la versión vigente del plugin. Si ya tienes Claude Code abierto, reinícialo para cargar el plugin.
 
 Para comprobar un checkout de desarrollo sin abrir una conversación:
 
@@ -64,4 +70,6 @@ Reinicia Claude Code o ejecuta `/reload-plugins` para cargar el plugin actualiza
 
 ## Licencia y fuentes
 
-El código de esta distribución se prepara bajo licencia MIT. Los proyectos externos, incluidos Hermes y MemSearch, conservan sus propias licencias y no están incluidos en ese permiso. Consulta [las referencias y componentes](THIRD_PARTY.md).
+El código de esta distribución utiliza la licencia MIT. Los proyectos externos, incluidos Hermes y MemSearch, conservan sus propias licencias y no están incluidos en ese permiso. Consulta [las referencias y componentes](THIRD_PARTY.md).
+
+Las contribuciones públicas se integran con los checks del instalador y aprobación explícita de un mantenedor. Las mejoras se distribuyen al publicar una release estable.
