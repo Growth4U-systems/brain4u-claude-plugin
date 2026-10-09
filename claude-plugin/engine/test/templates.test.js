@@ -23,6 +23,7 @@ test('mounts the private Brain and makes it the Hermes working directory', () =>
   assert.match(compose, /\/opt\/brain4u\/secrets\/ssh:\/opt\/brain4u-ssh:ro/);
   assert.match(compose, /working_dir: \/opt\/brain/);
   assert.match(compose, /GIT_SSH_COMMAND/);
+  assert.match(compose, /HERMES_WRITE_SAFE_ROOT: "\/opt\/data:\/opt\/brain"/);
 });
 
 test('points Hermes at the Brain index and governance rules', () => {
@@ -31,6 +32,7 @@ test('points Hermes at the Brain index and governance rules', () => {
   assert.match(config, /\/opt\/brain\/INDEX\.md/);
   assert.match(config, /governance\/memory-writeback-policy\.md/);
   assert.match(config, /cwd: \/opt\/brain/);
+  assert.match(config, /chief-of-staff\/SOUL\.md/);
 });
 
 test('places the Brain checkout before Hermes configuration and startup', () => {

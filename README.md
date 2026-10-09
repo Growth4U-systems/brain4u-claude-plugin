@@ -1,68 +1,75 @@
 # Brain4U for Claude Code
 
-Marketplace privado de Growth4U para instalar Brain4U desde Claude Code.
+Instala un Company Brain que aprende de tu contexto y conserva la experiencia que tus agentes necesitan para tomar mejores decisiones. Su agente predeterminado es un Chief of Staff con memoria privada propiedad de tu empresa.
+
+Distribución piloto 0.4.0 como plugin de Claude Code. El repositorio del instalador y el Brain privado de cada usuario son independientes. Consulta [el alcance y las pruebas](docs/release-verification.md): las conexiones a proveedores, el despliegue en tu servidor y los canales se comprueban en tu propia instalación.
+
+## Un comando y un wizard
+
+Con los requisitos de abajo instalados, ejecuta en una terminal interactiva:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Growth4U-systems/brain4u-claude-plugin/v0.4.0/install.sh | bash
+```
+
+`install.sh` registra el marketplace, instala y comprueba el plugin y abre `/brain4u-installer:brain4u-install`. Al recibir el script con `curl | bash`, conecta el wizard a la terminal interactiva. La entrada está fijada a la release 0.4.0; el marketplace instala la versión vigente del plugin. Si ya tienes Claude Code abierto, reinícialo para cargar el plugin.
+
+Para comprobar un checkout de desarrollo sin abrir una conversación:
+
+```bash
+bash install.sh --source-directory "$PWD" --no-wizard
+```
+
+El wizard ofrece Brain y Hermes nuevos, solo Brain o conexión asistida con un Hermes existente. Solo Brain crea el repositorio privado sin registrar una clave para el runtime y se detiene antes de conectar OpenRouter o Hetzner. La conexión de un Hermes existente conserva su perfil y requiere comprobación asistida. [Opciones de instalación](docs/installation-options.md).
 
 ## Requisitos
 
-- Acceso a este repositorio privado de GitHub.
-- Claude Code 2.1.169 o posterior.
-- Node.js 20 o posterior.
-- OpenSSH con `ssh-keygen`.
-- `uv` o `curl` para preparar el runtime local de MemSearch en su primera activacion, solo si se habilita esta capa opcional.
-- GitHub CLI (`gh`) autenticado en la cuenta donde se creara el Brain.
-- Una cuenta de OpenRouter.
-- Una cuenta de Hetzner con facturacion habilitada.
+- macOS, Linux o WSL; Windows nativo no está validado.
+- Claude Code 2.1.169 o posterior, con una cuenta autorizada para usarlo.
+- Node.js 20 o posterior, Git, GitHub CLI y OpenSSH.
+- Sesión GitHub en la cuenta que será propietaria de la memoria privada: `gh auth login`.
+- Para Hermes nuevo: cuentas propias de OpenRouter y Hetzner. El wizard consulta el precio vigente y exige confirmar el plan concreto antes de crear infraestructura.
 
-No se necesita Docker en el ordenador del usuario. El instalador lo configura en la VPS.
+No se necesita Docker en el ordenador del destinatario. El motor lo prepara en la VPS Ubuntu 24.04 x86_64. La imagen de Hermes se fija por digest; esta entrega usa la versión 0.20.5 comprobada, no un tag mutable `latest`.
 
-## Instalar
+## El Brain que aprende de tu negocio
 
-Primero autentica GitHub en el ordenador donde se ejecuta Claude Code:
+La plantilla 3 reúne una wiki de conocimiento, reglas de privacidad y procedencia, skills para recordar y recuperar aprendizajes, hooks de sesión, un contrato de indexación GBrain de solo lectura, lint, revisión de cambios de comportamiento y el perfil Chief of Staff. Es una distribución portable de esa arquitectura. Los datos, servicios e integraciones particulares del Brain interno de Growth4U permanecen privados.
 
-```bash
-gh auth login
-```
+Hermes usa el Brain montado como `/opt/brain`, lee su índice y sus reglas y trabaja con archivos persistentes. Los aprendizajes y decisiones autorizados se destilan con fuente, fecha, responsable y privacidad; un helper publica solo el registro elegido y verifica el commit remoto. Los cambios de políticas, identidad, playbooks y comportamiento pasan por revisión humana. Un archivo local o un push fallido no se presenta como memoria canónica.
 
-Despues instala el marketplace y el plugin:
+## Una memoria que mejora con el tiempo
 
-```bash
-claude plugin marketplace add Growth4U-systems/brain4u-claude-plugin --scope user
-claude plugin install brain4u-installer@brain4u --scope user
-```
+Una tarea diaria en el Brain privado aplica la lógica de la última release estable pública. Valida rutas y checksums, conserva archivos personalizados y excluye el conocimiento del negocio. En la VPS nueva, una sincronización cada quince minutos solo trae cambios cuando el checkout está limpio y en `main`. No descarta trabajo ni elimina archivos. [Condiciones de actualización](docs/updates.md).
 
-Abre Claude Code y escribe:
+Cada mejora distribuible se publica como release estable. Una actualización del plugin o un commit al Brain interno no actualizan automáticamente todos los Brains de clientes. Hermes tiene su propio ciclo de compatibilidad.
 
-```text
-Instala Brain4U
-```
+## Habla con tu Chief of Staff
 
-## Que hace esta version
+Slack y Google Chat son conexiones opcionales. Se configuran en las cuentas y el workspace del destinatario, después de verificar Hermes. No requieren pertenecer a Growth4U. Google Chat requiere Google Workspace y su configuración en Google Cloud. [Guía de canales](docs/messaging.md).
 
-Durante el recorrido, el plugin intenta instalar automaticamente MemSearch como memoria episodica local de Claude Code y verifica que quede habilitado. Esta capa es opcional: si la instalacion falla, hay un conflicto, falta acceso a internet o el equipo aplica una politica administrada, Brain4U muestra la advertencia y continua con la creacion del Brain. MemSearch guarda sus archivos por proyecto en `.memsearch/` y ejecuta embeddings e indice semantico en el ordenador del usuario. Para crear el resumen, el contenido parseado de cada turno se procesa con Claude Haiku y puede consumir cuota de Claude. En la primera activacion descarga el modelo local ONNX bge-m3, de aproximadamente 558 MB. No necesita una clave adicional para generar embeddings.
+Sancho y Mission Control no forman parte del paquete.
 
-Despues crea en la cuenta GitHub del usuario un repositorio privado `brain4u` a partir de la plantilla vacia incluida: LLM Wiki, configuracion GBrain read-only, reglas y workflows inspirados en GStack, gobernanza, privacidad, hooks, skills de memoria, lint y escritura por pull request. Registra una clave de despliegue dedicada, clona ese Brain en la VPS y lo monta en Hermes como `/opt/brain`, su memoria y directorio de trabajo. Tambien guia al usuario para conectar sus propias cuentas de OpenRouter y Hetzner, consulta el precio vigente, exige confirmacion antes de crear recursos, provisiona la VPS e instala y verifica Hermes.
+## Memoria episódica opcional para Claude Code
 
-El repositorio GitHub es la fuente de verdad privada propiedad del usuario. La VPS conserva su clon y ejecuta Hermes, que arranca desde el indice del Brain, aplica sus reglas y puede trabajar sobre sus archivos de forma persistente.
+El instalador intenta activar el plugin oficial MemSearch. Un conflicto, una descarga fallida o una política administrada no bloquean el Brain. También puede omitirse expresamente. Sus archivos `.memsearch/`, embeddings e índice permanecen fuera de GitHub. El resumen usa Claude Haiku y puede consumir cuota; la primera activación descarga el modelo ONNX bge-m3 de aproximadamente 558 MB. Un resumen solo sirve como candidato a aprendizaje hasta verificar sus fuentes y privacidad.
 
-MemSearch y Brain4U cumplen funciones distintas. MemSearch conserva memoria episodica local para que Claude Code recuerde conversaciones anteriores. Esa memoria y su indice no se suben a GitHub. Solo un aprendizaje destilado, revisado y aprobado puede entrar al Brain mediante un pull request. Hermes lee el Brain montado en la VPS, no el indice local de MemSearch.
+## Privacidad
 
-Si ya existe `claude-mem`, el instalador lo detecta y avisa de que puede haber captura duplicada, pero no lo desinstala ni lo deshabilita. En entornos offline o administrados se puede omitir MemSearch expresamente sin reducir las funciones del repositorio Brain ni de Hermes.
+Las credenciales entran en páginas locales privadas o en el asistente de Hermes, nunca en la conversación, la plantilla ni GitHub. Se guardan separadas de la configuración con permisos `0600`. El Brain del destinatario se crea privado. El instalador no ingiere automáticamente mensajes, correo ni datos de Growth4U.
 
-## Privacidad y seguridad
+La revisión de patrones e historial no detectó credenciales reales en el alcance examinado. No sustituye revisar cada release y sus archivos antes de publicarlos.
 
-- No pegues tokens ni claves en la conversacion.
-- Las credenciales entran mediante paginas locales y se guardan con permisos `0600`.
-- El plan no crea infraestructura.
-- La VPS solo se crea tras una confirmacion explicita vinculada al precio vigente.
-- El repositorio no contiene credenciales de Hetzner, OpenRouter ni instalaciones reales.
-- `.memsearch/` permanece fuera de git y nunca se publica como parte del Brain.
-- Un resumen generado por Claude Haiku no se considera conocimiento canonico hasta que se destila, revisa y aprueba mediante un pull request.
-- MemSearch se obtiene de su marketplace oficial y prepara su runtime desde fuentes upstream. No esta vendorizado ni fijado a un commit dentro de Brain4U.
-
-## Actualizar
+## Actualizar el instalador
 
 ```bash
 claude plugin marketplace update brain4u
 ```
 
-Reinicia Claude Code o ejecuta `/reload-plugins` para cargar la version actualizada.
+Reinicia Claude Code o ejecuta `/reload-plugins` para cargar el plugin actualizado.
+
+## Licencia y fuentes
+
+El código de esta distribución utiliza la licencia MIT. Los proyectos externos, incluidos Hermes y MemSearch, conservan sus propias licencias y no están incluidos en ese permiso. Consulta [las referencias y componentes](THIRD_PARTY.md).
+
+Las contribuciones públicas se integran con los checks del instalador y aprobación explícita de un mantenedor. Las mejoras se distribuyen al publicar una release estable.

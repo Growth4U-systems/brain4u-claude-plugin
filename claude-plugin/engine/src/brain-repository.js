@@ -149,6 +149,7 @@ export async function createBrainRepositoryCommand({
   configPath,
   templatePath = packagedTemplatePath(),
   runProcessImpl = runProcess,
+  connectRuntime = true,
 } = {}) {
   const repositoryName = config?.brain?.repositoryName ?? 'brain4u';
   if (!SAFE_REPOSITORY_NAME.test(repositoryName)) {
@@ -170,13 +171,13 @@ export async function createBrainRepositoryCommand({
   const sshUrl = `git@github.com:${fullName}.git`;
 
   const finalizeConnection = async ({ repository, alreadyExisted, repositoryCreated }) => {
-    const deployKey = await ensureDeployKey(config.brain.deployKeyFile, runProcessImpl);
-    const registeredKey = await ensureGitHubDeployKey({
+    const deployKey = connectRuntime ? await ensureDeployKey(config.brain.deployKeyFile, runProcessImpl) : { created: false };
+    const registeredKey = connectRuntime ? await ensureGitHubDeployKey({
       fullName,
       installationId: config.installationId,
       publicKey: deployKey.publicKey,
       runProcessImpl,
-    });
+    }) : { title: null, created: false };
     const configUpdated = await persistResolvedBrain(configPath, owner, sshUrl);
     return {
       ok: true,
@@ -192,6 +193,7 @@ export async function createBrainRepositoryCommand({
       deployKeyCreated: deployKey.created,
       deployKeyRegistered: registeredKey.created,
       configUpdated,
+      runtimeAccessConfigured: connectRuntime,
       mutationsPerformed: repositoryCreated || deployKey.created || registeredKey.created || configUpdated,
     };
   };

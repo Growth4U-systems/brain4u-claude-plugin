@@ -1,8 +1,12 @@
-# brain4u-claude-plugin: entrada automática a la cola de merge (política común de Growth4U,
-# ver Growth4U-systems/.github/.mergify.yml). Un PR listo (no draft) contra main
-# se encola solo y se mergea con squash, sin aprobación ni comentario.
-#
-# Este repo no tiene CI en los PRs, así que "en verde" es simplemente "no
-# draft": el PR se mergea nada más abrirse como listo. Si se añade CI, declarar
-# aquí sus checks con una regla `default` propia (ver g4u-loop o alarife-payload).
-extends: .github
+# Public contributions require passing installer checks and an explicit
+# maintainer label. Opening a ready PR alone must never publish new logic.
+pull_request_rules:
+  - name: Merge maintainer-approved installer changes
+    conditions:
+      - base = main
+      - -draft
+      - label = maintainer-approved
+      - check-success = tests
+    actions:
+      merge:
+        method: squash

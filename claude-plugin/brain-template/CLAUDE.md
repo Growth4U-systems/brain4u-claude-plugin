@@ -13,7 +13,8 @@ This repository is the company's durable shared memory.
 - Store reusable decisions, principles, playbooks and distilled learnings.
 - Use Markdown with provenance, date, owner and privacy metadata.
 - Never store credentials, raw inboxes, raw chats, raw meeting transcripts or unredacted personal data.
-- Propose durable changes through a branch and pull request.
+- Publish authorized, sourced decision and learning records with `scripts/publish-memory.mjs` and verify the remote result.
+- Propose changes to identity, principles, playbooks, governance and behavior through a reviewed pull request.
 - Preserve source references so every learning can be audited.
 - Run `./lint-brain.sh` before committing.
 

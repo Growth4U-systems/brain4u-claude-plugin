@@ -180,7 +180,7 @@ export function fingerprintConfig(config) {
   return createHash('sha256').update(stableStringify(config)).digest('hex');
 }
 
-export async function loadConfig(configPath) {
+export async function loadConfig(configPath, { requireBrainDeployKey = true } = {}) {
   const absolutePath = path.resolve(expandHome(configPath));
   const raw = JSON.parse(await readFile(absolutePath, 'utf8'));
   const config = validateConfig(raw);
@@ -190,7 +190,7 @@ export async function loadConfig(configPath) {
     const publicKeyStat = await stat(config.infrastructure.sshPublicKeyFile);
     if (!publicKeyStat.isFile()) throw new Error('infrastructure.sshPublicKeyFile is not a file');
   }
-  if (config.brain?.owner) {
+  if (config.brain?.owner && requireBrainDeployKey) {
     const deployKeyStat = await stat(config.brain.deployKeyFile);
     if (!deployKeyStat.isFile()) throw new Error('brain.deployKeyFile is not a file');
   }

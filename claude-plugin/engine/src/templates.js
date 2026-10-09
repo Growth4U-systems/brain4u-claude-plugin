@@ -5,6 +5,7 @@ export function renderCompose(config) {
   const brainRuntime = config.brain?.sshUrl ? `    working_dir: /opt/brain
     environment:
       GIT_SSH_COMMAND: "ssh -i /opt/brain4u-ssh/brain-deploy-key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=/opt/brain4u-ssh/known_hosts"
+      HERMES_WRITE_SAFE_ROOT: "/opt/data:/opt/brain"
 ` : '';
   const brainVolumes = config.brain?.sshUrl ? `
       - /opt/brain4u/brain:/opt/brain
@@ -33,6 +34,8 @@ ${brainRuntime}    shm_size: 1gb
 export function renderHermesConfig(config) {
   const brainInstructions = config.brain?.sshUrl ? `agent:
   system_prompt: |
+    You are the user's Chief of Staff, the default agent for this company Brain.
+    Read /opt/brain/agents/chief-of-staff/SOUL.md and OPERATIONS.md to apply your role.
     Your durable company memory is the private Brain4U repository mounted at /opt/brain.
     Start with /opt/brain/INDEX.md, then read only the relevant linked context.
     Follow CLAUDE.md, AGENTS.md and governance/memory-writeback-policy.md before writing.

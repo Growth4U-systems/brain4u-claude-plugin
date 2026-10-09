@@ -58,12 +58,35 @@ test('verify confirms the private Brain is mounted inside Hermes', async () => {
       'brain_origin=git@github.com:octocat/brain4u.git',
       'brain_workdir=/opt/brain',
       'brain_mounted=true',
+      'brain_runtime_access=true',
+      'brain_sync=active',
       'secret_in_logs=false',
     ].join('\n') }),
     isTcpPortOpenImpl: async () => false,
   });
   assert.equal(result.ok, true);
   assert.equal(result.checks.brainRepository.mountedInHermes, true);
+  assert.equal(result.checks.brainRepository.runtimeCanReadAndWrite, true);
+});
+
+test('verify rejects a root-readable mount that the agent cannot write', async () => {
+  const image = `nousresearch/hermes-agent@sha256:${'a'.repeat(64)}`;
+  const result = await verifyCommand({
+    config: {
+      installationId: 'brain4u-test', target: { host: '192.0.2.80', user: 'root' },
+      hermes: { image }, brain: { owner: 'octocat', sshUrl: 'git@github.com:octocat/brain4u.git' },
+    },
+    runSshImpl: async () => ({ stdout: [
+      'docker=active', 'container=running', `image=${image}`, 'env_mode=600',
+      'canary=78d000b3297402588017b17f28ddaafd23884a6c76f53ad75361f9a7191b897a',
+      'health={"status":"ok"}', 'brain_marker=present',
+      'brain_origin=git@github.com:octocat/brain4u.git', 'brain_workdir=/opt/brain',
+      'brain_mounted=true', 'brain_runtime_access=false', 'brain_sync=active', 'secret_in_logs=false',
+    ].join('\n') }),
+    isTcpPortOpenImpl: async () => false,
+  });
+  assert.equal(result.ok, false);
+  assert.deepEqual(result.failures, ['brain_runtime_permissions']);
 });
 
 test('accepts a healthy inference response containing the smoke marker', () => {

@@ -134,6 +134,29 @@ test('reuses an existing private repository only when it has the Brain marker', 
   assert.equal(result.deployKeyRegistered, true);
 });
 
+test('brain-only works for an external owner without creating or granting runtime credentials', async () => {
+  const templatePath = await makeTemplate();
+  const { config, configPath } = await makeConfig();
+  const calls = [];
+  const result = await createBrainRepositoryCommand({
+    config, configPath, templatePath, connectRuntime: false,
+    runProcessImpl: async (command, args) => {
+      calls.push([command, ...args]);
+      if (command !== 'gh') throw new Error('Unexpected runtime command');
+      if (args[0] === 'auth') return { stdout: '', stderr: '' };
+      if (args[0] === 'api' && args[1] === 'user') return { stdout: 'outside-owner\n', stderr: '' };
+      if (args[0] === 'repo') return { stdout: JSON.stringify({ url: 'https://github.com/outside-owner/brain4u', visibility: 'PRIVATE', defaultBranchRef: { name: 'main' } }), stderr: '' };
+      if (args[0] === 'api' && args[1] === 'repos/outside-owner/brain4u/contents/.brain4u-template-version') return { stdout: '.brain4u-template-version\n', stderr: '' };
+      throw new Error('Unexpected GitHub credential mutation');
+    },
+  });
+  assert.equal(result.repository, 'outside-owner/brain4u');
+  assert.equal(result.runtimeAccessConfigured, false);
+  assert.equal(result.deployKeyRegistered, false);
+  assert.equal(result.deployKeyCreated, false);
+  assert.ok(calls.every(call => !call.join(' ').includes('Growth4U-systems')));
+});
+
 test('builds the template as a real clean Git repository before publication', async () => {
   const templatePath = await makeTemplate();
   const { config, configPath } = await makeConfig();

@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict';
+import { mkdtemp, writeFile } from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
 import test from 'node:test';
 
-import { fingerprintConfig, validateConfig } from '../src/config.js';
+import { fingerprintConfig, loadConfig, validateConfig } from '../src/config.js';
 
 function validConfig() {
   return {
@@ -44,6 +47,18 @@ test('validates a resolved private Brain repository connection', () => {
   const config = validateConfig(raw);
   assert.equal(config.brain.owner, 'octocat');
   assert.equal(config.brain.sshUrl, 'git@github.com:octocat/brain4u.git');
+});
+
+test('a Brain-only configuration can be reopened before adding runtime access', async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), 'brain4u-only-config-'));
+  const raw = validConfig();
+  raw.target.identityFile = path.join(root, 'dedicated-installer-key');
+  await writeFile(raw.target.identityFile, 'synthetic key fixture');
+  raw.brain = { repositoryName: 'brain4u', visibility: 'private', owner: 'outside-owner', sshUrl: 'git@github.com:outside-owner/brain4u.git', deployKeyFile: path.join(root, 'not-created') };
+  const configPath = path.join(root, 'config.json');
+  await writeFile(configPath, JSON.stringify(raw));
+  assert.equal((await loadConfig(configPath, { requireBrainDeployKey: false })).config.brain.owner, 'outside-owner');
+  await assert.rejects(loadConfig(configPath), /ENOENT/);
 });
 
 test('rejects a Brain SSH URL that does not match its owner and repository', () => {

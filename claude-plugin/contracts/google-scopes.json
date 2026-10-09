@@ -62,5 +62,7 @@
     "refresh_token": "vps_secret_store_only",
     "logs": "redacted",
     "brain_repository": "never"
-  }
+  },
+  "distribution_status": "optional_reference_for_future_content_connectors_not_activated_by_this_installer",
+  "google_chat_configuration": "See docs/messaging.md; Google Chat uses client-owned service account and Pub/Sub, not this Gmail/Drive/Calendar OAuth contract."
 }

@@ -4,8 +4,8 @@
 |---|---|---|
 | Company identity | `wiki/company/identity/` | reviewed PR |
 | Principles | `wiki/company/principles/` | reviewed PR |
-| Decisions | `wiki/company/decisions/` | reviewed PR |
-| Learnings | `wiki/company/learnings/` | PR, optional safe auto-merge |
+| Decisions | `wiki/company/decisions/` | authorized, sourced record via memory helper |
+| Learnings | `wiki/company/learnings/` | authorized, sourced record via memory helper |
 | Playbooks | `wiki/company/playbooks/` | reviewed PR |
 | Rubrics | `wiki/company/rubrics/` | reviewed PR |
 | Historical snapshots | `wiki/company/snapshots/` | generated PR |

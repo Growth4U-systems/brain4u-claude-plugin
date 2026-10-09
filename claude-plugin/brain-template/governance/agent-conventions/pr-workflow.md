@@ -1,5 +1,7 @@
 # Pull request workflow
 
+Use this workflow for behavior, policy, identity, principles, playbooks and other protected changes. Authorized learning and decision records follow the separately documented memory helper route in `governance/memory-writeback-policy.md`.
+
 1. Read the relevant Brain context and source evidence.
 2. Create a focused branch.
 3. Add or update one durable concept.
