@@ -1,0 +1,21 @@
+name: Installer checks
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Validate shell syntax
+        run: bash -n install.sh
+      - name: Check the one-command entry point
+        run: node --test tests/bootstrap.test.mjs
+      - name: Check the packaged installation engine and template
+        run: bash claude-plugin/scripts/self-test.sh

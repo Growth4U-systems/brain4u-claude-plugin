@@ -36,6 +36,19 @@ Abre Claude Code y escribe:
 Instala Brain4U
 ```
 
+## Entrada única al wizard
+
+`install.sh` prepara el plugin y abre directamente el wizard de Claude Code. Comprueba las herramientas, el origen del marketplace y los archivos instalados. También permite alimentar el script con `curl | bash` sin perder la terminal interactiva del wizard.
+
+La publicación del enlace público está pendiente. Este repositorio sigue privado; una URL de descarga pública del script también necesita un marketplace accesible a sus destinatarios. El [recorrido de publicación y sus pruebas](docs/one-command-install.md) detalla esa condición y el alcance de la versión actual.
+
+Para probar desde este checkout sin abrir una conversación:
+
+```bash
+bash install.sh --source-directory "$PWD" --no-wizard
+node --test tests/bootstrap.test.mjs
+```
+
 ## Que hace esta version
 
 Durante el recorrido, el plugin intenta instalar automaticamente MemSearch como memoria episodica local de Claude Code y verifica que quede habilitado. Esta capa es opcional: si la instalacion falla, hay un conflicto, falta acceso a internet o el equipo aplica una politica administrada, Brain4U muestra la advertencia y continua con la creacion del Brain. MemSearch guarda sus archivos por proyecto en `.memsearch/` y ejecuta embeddings e indice semantico en el ordenador del usuario. Para crear el resumen, el contenido parseado de cada turno se procesa con Claude Haiku y puede consumir cuota de Claude. En la primera activacion descarga el modelo local ONNX bge-m3, de aproximadamente 558 MB. No necesita una clave adicional para generar embeddings.
